@@ -38,6 +38,7 @@ CREATE TABLE top_scores (
 ) ;
 ```
 2. Setup configuration
+
 Create a vars.env file in the root directory where launcher.py is with this template:
 ```
 osu_token='' # your osu! api token
