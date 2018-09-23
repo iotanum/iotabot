@@ -1,0 +1,7 @@
+__pycache__
+vars.env
+venv/*
+*.pyc
+*.log
+.idea
+cogs/anime/*
