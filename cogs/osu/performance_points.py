@@ -63,7 +63,7 @@ class PP:
         mods = await self.submitted_play_mods(mods)
         stars = await self.submitted_play_star_calc(bmap, mods)
         self.star_rating = round(stars.total, 2)
-        n50, n100, n300 = await self.possible_score_values(self.accuracy, bmap, misses)
+        n300, n100, n50 = await self.possible_score_values(self.accuracy, bmap, misses)
         self.pp = await self.calculate_pp(stars, bmap, mods, n50, n100, n300, combo, misses)
         await self.possible_pp_calculator(self.accuracy, bmap, stars, mods)
 
