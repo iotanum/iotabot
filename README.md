@@ -11,30 +11,30 @@ Will also be adding new features besides osu! tracking.
 Create three tables with the following column names:
 ```
 CREATE TABLE track (
- guild_id TYPE bigint,
- channel_id TYPE bigint,
- user_id TYPE bigint,
- username TYPE character varying,
- pp_raw TYPE double precision,
- accuracy TYPE double precision,
- pp_rank TYPE bigint,
- pp_country_rank TYPE bigint,
- country TYPE character varying
+ guild_id bigint,
+ channel_id bigint,
+ user_id bigint,
+ username character varying,
+ pp_raw double precision,
+ accuracy double precision,
+ pp_rank bigint,
+ pp_country_rank bigint,
+ country character varying
 ) ;
 ```
 ```
 CREATE TABLE top_scores (
- user_id TYPE bigint,
- username TYPE character varying,
- scores TYPE character varying
+ user_id bigint,
+ username character varying,
+ scores character varying
  ) ;
  ```
  ```
  CREATE TABLE latest_score (
- user_id TYPE bigint,
- username TYPE character varying,
- discord_user_id TYPE bigint,
- pp_rank TYPE bigint
+ user_id bigint,
+ username character varying,
+ discord_user_id bigint,
+ pp_rank bigint
 ) ;
 ```
 2. Setup configuration
