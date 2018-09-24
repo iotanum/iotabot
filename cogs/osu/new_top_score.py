@@ -55,8 +55,8 @@ class NewTopPlay:
         return score_list[1:][:-1].split(',')
 
     async def check_for_new_play(self, user_id):
-        new_plays = await self.type_change(await self.get_top_scores(user_id))
-        old_plays = await self.format_user_best(await api.get_user_best(user_id))
+        old_plays = await self.type_change(await self.get_top_scores(user_id))
+        new_plays = await self.format_user_best(await api.get_user_best(user_id))
         if new_plays != old_plays:
             self.new_score_num = await self.check_which(user_id, old_plays, new_plays)
 
