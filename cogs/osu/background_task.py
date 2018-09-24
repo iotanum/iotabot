@@ -58,7 +58,7 @@ class Task:
 
     @commands.is_owner()
     @commands.command(hiddden=True)
-    async def sleep(self, ctx, seconds):
+    async def sleep(self, ctx, seconds: int):
         self.bg_sleep = seconds
         await ctx.message.add_reaction("\U00002705")
 
