@@ -42,7 +42,7 @@ class Api:
     async def get_user_best(user_id):
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://osu.ppy.sh/api/get_user_best?"
-                                   f"k=7b7059b1de12bee0731d712ca5d15cf91418c33c&"
+                                   f"k={os.getenv('osu_token')}&"
                                    f"u={user_id}") as source:
                 Api.requests += 1
                 return await source.json()
