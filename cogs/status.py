@@ -43,7 +43,7 @@ class Status:
             self.placeholder_state += self.api_minute_state
             await asyncio.sleep(60)
 
-    @commands.cooldown(1, 5)
+    @commands.cooldown(1, 1, commands.BucketType.guild)
     @commands.command(name='status', aliases=['s'])
     async def status(self, ctx):
         days, hours, minutes, seconds = await self.up_time()
