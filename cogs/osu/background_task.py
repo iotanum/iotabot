@@ -10,7 +10,8 @@ class Task:
 
     def __init__(self, bot):
         self.bot = bot
-        self.bg_sleep = 2
+        self.list_sleep = 2
+        self.per_player_sleep = 0.5
         self.bg_task = self.bot.loop.create_task(self.background_task())
 
     async def background_task(self):
@@ -24,8 +25,8 @@ class Task:
                     await self.bot.get_cog("EmbedMessage").prepare_message(user, recent_data, channels)
                     print(f"New score: {username}, Posted in: "
                           f"{list(self.bot.get_channel(int(channel_id)).guild.name for channel_id in channels)}")
-                    await asyncio.sleep(0.3)
-            await asyncio.sleep(self.bg_sleep)
+                    await asyncio.sleep(self.per_player_sleep)
+            await asyncio.sleep(self.list_sleep)
 
     async def restart(self, ctx):
         await asyncio.sleep(2)
@@ -58,9 +59,21 @@ class Task:
         await ctx.message.add_reaction("\U00002705")
 
     @commands.is_owner()
-    @commands.command(hiddden=True)
-    async def sleep(self, ctx, seconds: int):
-        self.bg_sleep = seconds
+    @commands.group(hiddden=True)
+    async def sleep(self, ctx):
+        if not ctx.invoked_subcommand:
+            await ctx.send("Invalid sleep option passed.")
+
+    @commands.is_owner()
+    @sleep.command(hidden=True)
+    async def wlist(self, ctx, seconds: int):
+        self.list_sleep = seconds
+        await ctx.message.add_reaction("\U00002705")
+
+    @commands.is_owner()
+    @sleep.command(hidden=True)
+    async def player(self, ctx, seconds: float):
+        self.per_player_sleep = seconds
         await ctx.message.add_reaction("\U00002705")
 
 

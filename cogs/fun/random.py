@@ -23,10 +23,6 @@ class Fun:
     async def choose(self, ctx, *args):
         await ctx.send(random.choice(args))
 
-    @commands.command()
-    async def iota(self, ctx):
-        await self.bot.get_user(137214686973132800).send("<:iota:492312478726750208>")
-
     async def on_message(self, message):
         choices = ['...',
                    'LOL?',

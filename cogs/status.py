@@ -52,7 +52,8 @@ class Status:
                              f'Tracking status - ' + str(await self.track_status()) + '\n'
                              + f'osu! API requests ->\ntotal - ' + await self.per_minute_api() + ",\n"
                              + f'last minute: {self.api_minute_state}\n'
-                               f'Sleep time: ' + str(self.bot.get_cog("Task").bg_sleep) + 's```'
+                               f'Sleep time: ' + str(self.bot.get_cog("Task").list_sleep) + 's\n'
+                               f'Per player sleep time: ' + str(self.bot.get_cog("Task").per_player_sleep) + 's```'
                              + f'```coffeescript\n'
                                f'CPU usage: {psutil.cpu_percent(interval=None)}%\n'
                                f'RAM usage: {psutil.virtual_memory().percent}%```'
