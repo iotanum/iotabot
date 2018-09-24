@@ -24,6 +24,7 @@ class Task:
                     await self.bot.get_cog("EmbedMessage").prepare_message(user, recent_data, channels)
                     print(f"New score: {username}, Posted in: "
                           f"{list(self.bot.get_channel(int(channel_id)).guild.name for channel_id in channels)}")
+                    await asyncio.sleep(0.3)
             await asyncio.sleep(self.bg_sleep)
 
     async def restart(self, ctx):
