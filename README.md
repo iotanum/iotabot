@@ -1,9 +1,7 @@
 # iotabot
 
-A personal project that I'm currently working on. I know this is quite a mess, I'll keep updating it until I feel
-satisfied with the code. 
-
-Will also be adding new features besides osu! tracking.
+A personal project that I'm currently working on. I'll keep updating it until I feel
+satisfied with the code and it's features. 
 
 # Running
 1. PostgreSQL database with PostgreSQL 9.5 or higher
@@ -43,7 +41,7 @@ Create a vars.env file in the root directory where launcher.py is with this temp
 ```
 osu_token='' # your osu! api token
 discord_token='' # your discord api token
-login='' # your PostgreSQL login
-passw='' # your PostgreSQL password
 db='' # your PostgreSQL database name
+login='' # your PostgreSQL database login
+passw='' # your PostgreSQL database password
 ```
