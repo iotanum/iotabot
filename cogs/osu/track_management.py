@@ -162,7 +162,7 @@ class OsuTracking:
 
     @commands.is_owner()
     @commands.command(hidden=True)
-    async def cool_add(self, ctx, *, arg):
+    async def debug_add(self, ctx, *, arg):
         usernames = arg.split(", ")
         await ctx.send(f"This will take about *{len(usernames) * 3 + 3}* seconds..")
         for username in usernames:
@@ -170,6 +170,30 @@ class OsuTracking:
             await self.add_player(ctx.guild.id, ctx.channel.id, get_user)
             await asyncio.sleep(3)
         await ctx.send(f"Added {usernames}")
+
+    @commands.guild_only()
+    @commands.cooldown(1, 2, commands.BucketType.guild)
+    @commands.command(brief="Shows your latest osu! score", aliases=['ls'])
+    async def latest_score(self, ctx, *, player=None):
+        ls = self.bot.get_cog("LatestScore")
+        if not player:
+            await ls.check_info(ctx)
+        else:
+            db_user = await ls.check_if_exists_in_tracked(player)
+            if db_user:
+                await ls.embed(ctx, db_user)
+            else:
+                await ls.custom_ls(ctx, player)
+
+    @commands.guild_only()
+    @commands.cooldown(1, 2, commands.BucketType.guild)
+    @commands.command(brief="Adds your nickname for 'ls'", aliases=['setls'])
+    async def set_ls_nickname(self, ctx, *, arg):
+        ls = self.bot.get_cog("LatestScore")
+        if await ls.add_nickname(ctx, arg):
+            await ctx.message.add_reaction("\U00002705")
+        else:
+            await ctx.send(f"{arg} does not exist.")
 
 
 async def total_unique_tracking():

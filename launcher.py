@@ -8,7 +8,7 @@ bot = commands.Bot(command_prefix='>')
 initial_extensions = ['cogs.osu.track_management',
                       'cogs.osu.background_task',
                       'cogs.osu.embed',
-                      'cogs.osu.get_failed_score',
+                      'cogs.osu.get_latest_score',
                       'cogs.status',
                       'cogs.fun.random',
                       'cogs.command_error_handle']

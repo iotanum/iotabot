@@ -42,6 +42,9 @@ class EmbedMessage:
         return f"{str(calculators.accuracy) + '%' + '(' + str(score.rank) + ')': ^{length + 2}}", \
                f"{str(score.maxcombo) + 'x/' + str(beatmap.max_combo) + 'x': ^{length}}"
 
+    async def beatmap_link(self, score):
+        return f"https://osu.ppy.sh/b/{score.beatmap_id}"
+
     async def embed_message(self, user_stuff, score, beatmap, pictures, calculators, after_play, map_perc, channels):
         username, user_id, pp_rank = user_stuff
         acc_fc, ss, pp95, pp90 = calculators.possible_pp
@@ -51,7 +54,7 @@ class EmbedMessage:
                                                                          await self.text_length_calc(beatmap, score))
 
         embed = discord.Embed(title=beatmap.artist + " - " + beatmap.title + f" *[{beatmap.version}]*",
-                              url=pictures.beatmap_link,
+                              url=await self.beatmap_link(score),
                               color=await self.embed_color(beatmap.approved),
                               description=f"+ __**{score.enabled_mods}**__ ({calculators.star_rating}★), "
                                           f"worth - **{calculators.pp}pp**/**{acc_fc}pp**\n"

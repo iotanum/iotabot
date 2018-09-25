@@ -110,28 +110,6 @@ class LatestScore:
         else:
             await ctx.send(f"{username} has no latest scores.")
 
-    @commands.guild_only()
-    @commands.cooldown(1, 2, commands.BucketType.guild)
-    @commands.command(brief="Used your latest osu! score", aliases=['ls'])
-    async def latest_score(self, ctx, *, player=None):
-        if not player:
-            await self.check_info(ctx)
-        else:
-            db_user = await self.check_if_exists_in_tracked(player)
-            if db_user:
-                await self.embed(ctx, db_user)
-            else:
-                await self.custom_ls(ctx, player)
-
-    @commands.guild_only()
-    @commands.cooldown(1, 2, commands.BucketType.guild)
-    @commands.command(brief="Adds your osu! nickname for 'ls'", aliases=['lsn'])
-    async def latest_score_nickname(self, ctx, *, arg):
-        if await self.add_nickname(ctx, arg):
-            await ctx.message.add_reaction("\U00002705")
-        else:
-            await ctx.send(f"{arg} does not exist.")
-
 
 def setup(bot):
     bot.add_cog(LatestScore(bot))
