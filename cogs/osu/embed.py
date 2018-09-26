@@ -75,7 +75,7 @@ class EmbedMessage:
                         inline=False)
         if after_play.new_stuff:
             embed.add_field(name="Changes",
-                            value=f"```fix\n"
+                            value=f"```coffeescript\n"
                                   f"{after_play.new_stuff}"
                                   f"\n```",
                             inline=False)
