@@ -173,7 +173,7 @@ class OsuTracking:
 
     @commands.guild_only()
     @commands.cooldown(1, 2, commands.BucketType.guild)
-    @commands.command(brief="Shows your latest osu! score", aliases=['ls'])
+    @commands.group(brief="Shows your latest osu! score", aliases=['ls'], invoke_without_command=True)
     async def latest_score(self, ctx, *, player=None):
         ls = self.bot.get_cog("LatestScore")
         if not player:
@@ -187,8 +187,8 @@ class OsuTracking:
 
     @commands.guild_only()
     @commands.cooldown(1, 2, commands.BucketType.guild)
-    @commands.command(brief="Adds your nickname for 'ls'", aliases=['setls'])
-    async def set_ls_nickname(self, ctx, *, arg):
+    @latest_score.command(brief="Adds your nickname for 'ls'", aliases=['setls'])
+    async def set(self, ctx, *, arg):
         ls = self.bot.get_cog("LatestScore")
         if await ls.add_nickname(ctx, arg):
             await ctx.message.add_reaction("\U00002705")
