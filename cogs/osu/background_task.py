@@ -1,4 +1,5 @@
 import asyncio
+import aiohttp
 from discord.ext import commands
 from .track_management import TrackingData
 from .api_calls import api
@@ -28,10 +29,12 @@ class Task:
                               f"{list(self.bot.get_channel(int(channel_id)).guild.name for channel_id in channels)}")
                         await asyncio.sleep(self.per_player_sleep)
                 await asyncio.sleep(self.list_sleep)
+            except aiohttp.client_exceptions.ClientConnectionError:
+                print("OSUAPI lib error skipped")
+                continue
             except Exception as e:
-                await self.bot.get_user(450567441437687818).send(f"{traceback.format_exc()}\n"
+                await self.bot.get_user(450567441437687818).send(f"```{traceback.format_exc()}```\n"
                                                                  f"Trying to reset the loop..")
-                self.bg_task.cancel()
                 await self.restart()
                 await self.bot.get_user(450567441437687818).send(f"Restarted\n```{asyncio.Task.all_tasks()}```")
 
