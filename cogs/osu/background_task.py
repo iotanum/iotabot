@@ -27,12 +27,12 @@ class Task:
                     pi = TD.tracked_players[username]  # pi will be referred as player information
                     if TD.tracked_players[username]['online'] is True:
                         submitted_play = await CheckForScores.recent_score(pi['user_id'], pi['channels'])
-                    if submitted_play:
-                        await embed.prepare_message([username, pi['user_id'], pi['pp_rank']],
-                                                    submitted_play, pi['channels'])
-                        print(f"New score: {username}, Posted in: "
-                              f"{list(self.bot.get_channel(channel_id).guild.name for channel_id in pi['channels'])}")
-                        await asyncio.sleep(self.per_player_sleep)
+                        if submitted_play:
+                            await embed.prepare_message([username, pi['user_id'], pi['pp_rank']],
+                                                        submitted_play, pi['channels'])
+                            print(f"New score: {username}, Posted in: "
+                                f"{list(self.bot.get_channel(channel_id).guild.name for channel_id in pi['channels'])}")
+                            await asyncio.sleep(self.per_player_sleep)
                 await asyncio.sleep(self.list_sleep)
 
             except aiohttp.client_exceptions.ClientConnectionError:
