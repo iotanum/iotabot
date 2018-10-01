@@ -48,20 +48,17 @@ class Debugging:
         await self.task.stop_task()
         await ctx.message.add_reaction("\U00002705")
 
-    @commands.is_owner()
-    @debug.group(hiddden=True)
+    @debug.group()
     async def sleep(self, ctx):
         if not ctx.invoked_subcommand:
             await ctx.send("Invalid sleep option passed.")
 
-    @commands.is_owner()
-    @sleep.command(hidden=True)
+    @sleep.command()
     async def whole_list(self, ctx, seconds: int):
         self.task.list_sleep = seconds
         await ctx.message.add_reaction("\U00002705")
 
-    @commands.is_owner()
-    @sleep.command(hidden=True)
+    @sleep.command()
     async def per_player(self, ctx, seconds: float):
         self.task.per_player_sleep = seconds
         await ctx.message.add_reaction("\U00002705")
