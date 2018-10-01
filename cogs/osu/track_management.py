@@ -12,7 +12,7 @@ wait_select(aconn)
 ac = aconn.cursor()
 
 
-class OsuTracking:
+class Tracking:
     def __init__(self, bot):
         self.bot = bot
 
@@ -101,8 +101,8 @@ class OsuTracking:
         if not ctx.invoked_subcommand:
             await ctx.send("Invalid osu option passed.")
 
-    @osu.command(brief="Starts tracking a specific player", aliases=['t'])
-    async def track(self, ctx, *, arg):
+    @osu.command(brief="Adds a player to the tracking list", aliases=['a'])
+    async def add(self, ctx, *, arg):
         get_user = await self.osu_player_check(arg)
         server_checks = await self.server_checks(ctx)
         player_check = await self.player_check(ctx, arg)
@@ -119,7 +119,7 @@ class OsuTracking:
         else:
             await ctx.send(f"{get_user.username} is already being tracked.")
 
-    @osu.command(brief="Stops tracking a specific player", aliases=['del', 'd'])
+    @osu.command(brief="Deletes a player from the tracking list", aliases=['del', 'd'])
     async def delete(self, ctx, *, arg):
         if await self.search_player(ctx, arg):
             await self.delete_user(ctx, arg)
@@ -163,7 +163,7 @@ class OsuTracking:
             else:
                 await ls.custom_ls(ctx, player)
 
-    @latest_score.command(brief="Adds your nickname for 'ls'", aliases=['setls'])
+    @latest_score.command(brief="Adds your nickname for 'ls'")
     async def set(self, ctx, *, arg):
         ls = self.bot.get_cog("LatestScore")
         if await ls.add_nickname(ctx, arg):
@@ -179,5 +179,5 @@ async def total_unique_tracking():
 
 
 def setup(bot):
-    bot.add_cog(OsuTracking(bot))
+    bot.add_cog(Tracking(bot))
 
