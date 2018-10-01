@@ -1,7 +1,7 @@
 from psycopg2.extras import wait_select
 import psycopg2
 import os
-from .track_management import TrackingData
+from .tracking_data import TrackingData as TD
 from .api_calls import api
 
 aconn = psycopg2.connect(f'dbname={os.getenv("db")} user={os.getenv("login")} password={os.getenv("passw")}', async=1)
@@ -57,7 +57,7 @@ class Changes:
         ac.execute("UPDATE track SET pp_raw = %s, accuracy = %s, pp_rank = %s, pp_country_rank = %s"
                    " WHERE user_id = %s", (pp, acc, rank, c_rank, user_id))
         wait_select(ac.connection)
-        await TrackingData.update_list()
+        await TD.update_list()
 
     async def text_format_if_changed(self, changes):
         for idx, var in enumerate(changes):

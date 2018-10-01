@@ -1,11 +1,10 @@
 import os
 import discord
 import psycopg2
-import asyncio
 from psycopg2.extras import wait_select
 from discord.ext import commands
 from .api_calls import api
-from .tracking_data import TrackingData
+from .tracking_data import TrackingData as TD
 from .new_top_score import NewScore
 
 aconn = psycopg2.connect(f'dbname={os.getenv("db")} user={os.getenv("login")} password={os.getenv("passw")}', async=1)
@@ -25,13 +24,13 @@ class OsuTracking:
                     round(get_user.accuracy, 2), get_user.pp_rank, get_user.pp_country_rank, get_user.country))
         wait_select(ac.connection)
         await NewScore.add_scores(get_user.username, get_user.user_id)
-        await TrackingData.update_list()
+        await TD.update_list()
 
     async def delete_user(self, ctx, username):
         ac.execute("DELETE FROM track where guild_id = %s and username ILIKE %s", (ctx.guild.id, username))
         wait_select(ac.connection)
         await NewScore.remove_scores(username)
-        await TrackingData.update_list()
+        await TD.update_list()
         return username
 
     # returns everything player related
@@ -96,8 +95,13 @@ class OsuTracking:
         return player if player else None
 
     @commands.guild_only()
-    @commands.cooldown(1, 1, commands.BucketType.guild)
-    @commands.command(brief="Starts tracking a specific player", aliases=['t'])
+    @commands.cooldown(1, 1, commands.BucketType.user)
+    @commands.group(brief='Variuos osu! related commands/subcommands', aliases=['os', 'o'])
+    async def osu(self, ctx):
+        if not ctx.invoked_subcommand:
+            await ctx.send("Invalid osu option passed.")
+
+    @osu.command(brief="Starts tracking a specific player", aliases=['t'])
     async def track(self, ctx, *, arg):
         get_user = await self.osu_player_check(arg)
         server_checks = await self.server_checks(ctx)
@@ -115,9 +119,7 @@ class OsuTracking:
         else:
             await ctx.send(f"{get_user.username} is already being tracked.")
 
-    @commands.guild_only()
-    @commands.cooldown(1, 1, commands.BucketType.guild)
-    @commands.command(brief="Stops tracking a specific player", aliases=['d'])
+    @osu.command(brief="Stops tracking a specific player", aliases=['del', 'd'])
     async def delete(self, ctx, *, arg):
         if await self.search_player(ctx, arg):
             await self.delete_user(ctx, arg)
@@ -125,10 +127,8 @@ class OsuTracking:
         else:
             await ctx.send(f"{arg} does not exist in the tracking list.")
 
-    @commands.guild_only()
-    @commands.cooldown(1, 1, commands.BucketType.guild)
-    @commands.command(brief="Shows players user profile", aliases=['p'], name="profile")
-    async def user_profile(self, ctx, *, arg):
+    @osu.command(brief="Shows players user profile", aliases=['p'])
+    async def profile(self, ctx, *, arg):
         embed = discord.Embed()
         embed.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=pink&uname={arg}"
                             f"&pp=1&countryrank&flagshadow&flagstroke&darktriangles&onlineindicator="
@@ -136,9 +136,7 @@ class OsuTracking:
         embed.set_footer(text="https://lemmmy.pw/osusig/")
         await ctx.send(embed=embed)
 
-    @commands.guild_only()
-    @commands.cooldown(1, 1, commands.BucketType.guild)
-    @commands.command(brief="List of currently tracked players", aliases=['c'])
+    @osu.command(brief="List of currently tracked players", aliases=['c'])
     async def check(self, ctx):
         check_list = await self.tracked_players_list(ctx.message.guild.id)
         if str(check_list) == "[]":
@@ -150,30 +148,10 @@ class OsuTracking:
                                                         for username, user_id in check_list), inline=True)
             await ctx.send(embed=embed)
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def debug_track(self, ctx):
-        user_list = ""
-        for idx, (user, channel_id) in enumerate(TrackingData.player_list.items(), 1):
-            username, user_id, pp_rank = user
-            channels = list(channel for channel in channel_id)
-            user_list += f"{idx}. {username}, {user_id}, tracking in: {channels}\n"
-        await ctx.send(f"```{user_list}```")
-
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def debug_add(self, ctx, *, arg):
-        usernames = arg.split(", ")
-        await ctx.send(f"This will take about *{len(usernames) * 3 + 3}* seconds..")
-        for username in usernames:
-            get_user = await self.osu_player_check(username)
-            await self.add_player(ctx.guild.id, ctx.channel.id, get_user)
-            await asyncio.sleep(3)
-        await ctx.send(f"Added {usernames}")
-
     @commands.guild_only()
-    @commands.cooldown(1, 2, commands.BucketType.guild)
-    @commands.group(brief="Shows your latest osu! score", aliases=['ls'], invoke_without_command=True)
+    @commands.cooldown(1, 1, commands.BucketType.user)
+    @commands.group(brief="Shows your latest osu! score", aliases=['ls'], invoke_without_command=True,
+                    name='latestscore')
     async def latest_score(self, ctx, *, player=None):
         ls = self.bot.get_cog("LatestScore")
         if not player:
@@ -185,8 +163,6 @@ class OsuTracking:
             else:
                 await ls.custom_ls(ctx, player)
 
-    @commands.guild_only()
-    @commands.cooldown(1, 2, commands.BucketType.guild)
     @latest_score.command(brief="Adds your nickname for 'ls'", aliases=['setls'])
     async def set(self, ctx, *, arg):
         ls = self.bot.get_cog("LatestScore")

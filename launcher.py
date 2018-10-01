@@ -5,12 +5,9 @@ import asyncio
 
 load_dotenv("vars.env")
 bot = commands.Bot(command_prefix='>')
-initial_extensions = ['cogs.osu.track_management',
-                      'cogs.osu.background_task',
-                      'cogs.osu.embed',
-                      'cogs.osu.get_latest_score',
-                      'cogs.status',
+initial_extensions = ['cogs.osu.extensions',
                       'cogs.fun.random',
+                      'cogs.status',
                       'cogs.command_error_handle']
 
 
