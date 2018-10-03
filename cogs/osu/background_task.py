@@ -44,6 +44,7 @@ class Task:
 
     async def on_member_update(self, member_before, member_after):
         try:
+            await asyncio.sleep(10)
             if member_after.activity.name == 'osu!' and member_after.activity.assets['large_text'] != 'Guest':
                 if member_after not in self.timer.keys():
                     username = member_after.activity.assets['large_text'].split(" ")[0]
