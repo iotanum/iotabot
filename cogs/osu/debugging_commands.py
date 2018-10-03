@@ -9,7 +9,7 @@ class Debugging:
         self.get_cog()
 
     def get_cog(self):
-        self.tm = self.bot.get_cog('OsuTracking')
+        self.tm = self.bot.get_cog('Tracking')
         self.task = self.bot.get_cog('Task')
 
     @commands.is_owner()
