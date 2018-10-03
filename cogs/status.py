@@ -34,7 +34,7 @@ class Status:
 
     async def per_minute_api(self):
         per_minute_api = round(api.requests / await self.total_minutes(), 1)
-        return f"{api.requests}, avarage of {per_minute_api}/min"
+        return f"{api.requests}, average of {per_minute_api}/min"
 
     async def last_minute_api(self):
         await self.bot.wait_until_ready()

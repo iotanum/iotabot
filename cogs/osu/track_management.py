@@ -136,8 +136,8 @@ class Tracking:
         embed.set_footer(text="https://lemmmy.pw/osusig/")
         await ctx.send(embed=embed)
 
-    @osu.command(brief="List of currently tracked players", aliases=['c'])
-    async def check(self, ctx):
+    @osu.command(brief="List of currently tracked players", aliases=['l'])
+    async def list(self, ctx):
         check_list = await self.tracked_players_list(ctx.message.guild.id)
         if str(check_list) == "[]":
             await ctx.send("There's no players at this moment that are being tracked.\n"
