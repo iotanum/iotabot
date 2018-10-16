@@ -64,8 +64,8 @@ class EmbedMessage:
                          icon_url=pictures.user_avatar)
         embed.set_thumbnail(url=pictures.beatmap_bg)
         embed.add_field(name='Beatmap',
-                        value=f"__{length[0]}:{length[1]}min, {bpm}bpm__\n"
-                              f"``{difficulties}``",
+                        value=f"\U0001f53a__{length[0]}:{length[1]}min, {bpm}bpm__\n"
+                              f"\U0001f53a``{difficulties}``",
                         inline=False)
         embed.add_field(name=f'Score',
                         value=f"```coffeescript\n"
