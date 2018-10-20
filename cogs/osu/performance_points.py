@@ -11,11 +11,12 @@ class PP:
         self.accuracy = ""
         self.possible_pp = []
 
-    async def submitted_score_calc(self, get_user_recent):
+    async def submitted_accuracy_calc(self, get_user_recent):
+        print(get_user_recent.countmiss)
         accuracy_real = (((get_user_recent.count300 * 300) + (get_user_recent.count100 * 100) +
-                    (get_user_recent.count50 * 50) + (get_user_recent.countmiss * 0)) /
-                    ((get_user_recent.count300 + get_user_recent.count100 + get_user_recent.count50 +
-                      get_user_recent.countmiss) * 300)) * 100
+                          (get_user_recent.count50 * 50) + (get_user_recent.countmiss * 0)) /
+                         ((get_user_recent.count300 + get_user_recent.count100 + get_user_recent.count50 +
+                           get_user_recent.countmiss) * 300)) * 100
 
         return round(accuracy_real, 2)
 
@@ -50,6 +51,10 @@ class PP:
         pp = round(calc[0], 2)
         return pp
 
+    async def if_fc_accuracy(self, get_user_recent):
+        get_user_recent.countmiss = 0
+        return await self.submitted_accuracy_calc(get_user_recent)
+
     # returns speed_multiplier, ar, od, cs, hp
     async def beatmap_difficulity_with_mods(self, mods, beatmap_default):
         mods_from_str = await self.submitted_play_mods(mods)
@@ -58,14 +63,15 @@ class PP:
 
     async def calculator(self, get_user_recent):
         mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
-        self.accuracy = await self.submitted_score_calc(get_user_recent)
+        self.accuracy = await self.submitted_accuracy_calc(get_user_recent)
         bmap = await self.parse_beatmap_file(get_user_recent.beatmap_id)
         mods = await self.submitted_play_mods(mods)
         stars = await self.submitted_play_star_calc(bmap, mods)
         self.star_rating = round(stars.total, 2)
         n300, n100, n50 = await self.possible_score_values(self.accuracy, bmap, misses)
         self.pp = await self.calculate_pp(stars, bmap, mods, n50, n100, n300, combo, misses)
-        await self.possible_pp_calculator(self.accuracy, bmap, stars, mods)
+        acc_if_fc = await self.if_fc_accuracy(get_user_recent)
+        await self.possible_pp_calculator(acc_if_fc, bmap, stars, mods)
 
     async def possible_pp_calculator(self, accuracy, bmap, stars, mods):
         self.possible_pp = []
