@@ -1,4 +1,4 @@
-class Extensions:
+class OsuExtensions:
     def __init__(self, bot):
         self.bot = bot
         self.add_osu_cogs()
@@ -19,4 +19,4 @@ class Extensions:
 
 
 def setup(bot):
-    bot.add_cog(Extensions(bot))
+    bot.add_cog(OsuExtensions(bot))

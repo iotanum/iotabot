@@ -6,7 +6,7 @@ import asyncio
 load_dotenv("vars.env")
 bot = commands.Bot(command_prefix='>')
 initial_extensions = ['cogs.osu.extensions',
-                      'cogs.fun.random',
+                      'cogs.fun.extensions',
                       'cogs.status',
                       'cogs.command_error_handle']
 
