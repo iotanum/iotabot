@@ -12,7 +12,6 @@ class PP:
         self.possible_pp = []
 
     async def submitted_accuracy_calc(self, get_user_recent):
-        print(get_user_recent.countmiss)
         accuracy_real = (((get_user_recent.count300 * 300) + (get_user_recent.count100 * 100) +
                           (get_user_recent.count50 * 50) + (get_user_recent.countmiss * 0)) /
                          ((get_user_recent.count300 + get_user_recent.count100 + get_user_recent.count50 +
