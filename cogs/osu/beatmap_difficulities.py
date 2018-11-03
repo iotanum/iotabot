@@ -11,11 +11,9 @@ class BeatmapDifficulities:
     async def length_calculator(self, beatmap, mods=False):
         minutes, seconds = divmod((beatmap.total_length - (beatmap.total_length * 0.33))
                                   if mods else beatmap.total_length, 60)
-        seconds = round(seconds, 0)
-        if len(str(seconds)) < 2:
+        seconds = int(round(seconds, 0))
+        if seconds < 10:
             seconds = f"0{seconds}"
-        else:
-            seconds = int(seconds)
         return int(minutes), seconds
 
     async def difficulties_without_mods(self, beatmap):
@@ -56,8 +54,7 @@ class BeatmapDifficulities:
 
     async def magic_counter(self, counter):
         choices = ['AR', 'OD', 'HP', 'CS']
-        for choice in range(counter + 1):
-            return choices[counter]
+        return choices[counter]
 
     async def bpm_calculator(self, bpm, mods=False):
         return int(round(bpm * 1.5, 0)) if mods else int(bpm)
