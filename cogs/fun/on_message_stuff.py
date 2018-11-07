@@ -21,10 +21,10 @@ class OnMsg:
     async def random_response(self, message):
         choices = await self.random_response_choices(message)
         if OnMsg.counter == OnMsg.messages_until:
-            await asyncio.sleep(3)
-            await self.bot.get_channel(message.channel.id).send(random.choice(choices))
             OnMsg.counter = 0
             OnMsg.messages_until = random.randint(1, 5000)
+            await asyncio.sleep(3)
+            await self.bot.get_channel(message.channel.id).send(random.choice(choices))
 
     async def random_response_choices(self, message):
         return ['...',
