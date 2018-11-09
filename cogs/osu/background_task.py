@@ -37,7 +37,7 @@ class Task:
 
             except aiohttp.client_exceptions.ClientConnectionError:
                 continue
-            except RuntimeError:
+            except (RuntimeError, asyncio.TimeoutError):
                 continue
             except Exception as e:
                 await self.bot.get_user(450567441437687818).send(f"```{traceback.format_exc()}```\n")
