@@ -48,8 +48,9 @@ class Task:
             if member_after.activity.name == 'osu!' and member_after.activity.assets['large_text'] != 'Guest':
                 if member_after not in self.timer.keys():
                     username = member_after.activity.assets['large_text'].split(" ")[0]
-                    self.timer[member_after] = datetime.utcnow(), username
-                    TD.tracked_players[username]['online'] = True
+                    if username in TD.tracked_players.keys():
+                        self.timer[member_after] = datetime.utcnow(), username
+                        TD.tracked_players[username]['online'] = True
 
         except Exception as e:
             if member_after in self.timer.keys():
