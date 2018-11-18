@@ -11,11 +11,15 @@ class QuoteMessage:
 
     async def check_for_searchable(self, word_to_edit, messages):
         for message in messages:
-            if word_to_edit in message.content and await self.skip_command_msg(message):
+            if word_to_edit in message.content and await self.skip_command_msg(message) \
+                    and await self.skip_bots_msg(message):
                 return message
 
     async def skip_command_msg(self, message):
         return not message.content.startswith(await self.bot.get_prefix(message))
+
+    async def skip_bots_msg(self, message):
+        return message.author != self.bot.user
 
     async def edit_quote(self, msg_content, word_to_edit, edit_to):
         return msg_content.replace(word_to_edit, edit_to)
