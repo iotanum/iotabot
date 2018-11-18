@@ -22,12 +22,15 @@ class QuoteMessage:
 
     @commands.command(name='quote', aliases=['q'])
     async def edit_last_5_messages(self, ctx, word_to_edit, edit_to):
-        message = await self.get_message(ctx.channel, word_to_edit)
-        edited_msg_content = await self.edit_quote(message.content, word_to_edit, edit_to)
-        e = discord.Embed(description=edited_msg_content)
-        e.set_author(name=message.author.display_name, icon_url=message.author.avatar_url_as(format='png'))
-        e.timestamp = message.created_at
-        await ctx.send(embed=e)
+        try:
+            message = await self.get_message(ctx.channel, word_to_edit)
+            edited_msg_content = await self.edit_quote(message.content, word_to_edit, edit_to)
+            e = discord.Embed(description=edited_msg_content, color=ctx.author.color)
+            e.set_author(name=message.author.display_name, icon_url=message.author.avatar_url_as(format='png'))
+            e.timestamp = message.created_at
+            await ctx.send(embed=e)
+        except AttributeError:
+            pass
 
 
 def setup(bot):
