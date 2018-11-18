@@ -45,8 +45,12 @@ class LatestScore:
         return len(bmap.hitobjects)
 
     async def calculate_map_percentage_done(self, beatmap, recent_score):
-        return (round((await self.count_recent_objects(recent_score) / await self.beatmap_objects(beatmap)) * 100, 2)) \
-            if str(recent_score.rank) == "F" else 100
+        try:
+            return (round((await self.count_recent_objects(recent_score)
+                           / await self.beatmap_objects(beatmap)) * 100, 2)) \
+                if str(recent_score.rank) == "F" else 100
+        except ZeroDivisionError:
+            return 0
 
     async def format_map_percatange_done(self, beatmap, recent_score):
         percentage = str(await self.calculate_map_percentage_done(beatmap, recent_score))
