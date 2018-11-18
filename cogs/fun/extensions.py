@@ -5,7 +5,8 @@ class FunExtensions:
 
     def add_fun_cogs(self):
         extensions = ['cogs.fun.random',
-                      'cogs.fun.on_message_stuff'
+                      'cogs.fun.on_message_stuff',
+                      'cogs.fun.edit_message'
                       ]
 
         for extension in extensions:
