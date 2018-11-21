@@ -70,7 +70,8 @@ class EmbedMessage:
         embed.add_field(name=f'Score',
                         value=f"```coffeescript\n"
                               f"Accuracy - {accuracy_string}\n"
-                              f"Combo    - {combo_string}, {score.countmiss}x\n"
+                              f"Combo    - {combo_string},\n"
+                              f"Misses   - {score.countmiss}x\n"
                               f"```",
                         inline=False)
         if after_play.new_stuff:
