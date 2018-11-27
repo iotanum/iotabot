@@ -14,6 +14,9 @@ class BeatmapDifficulities:
         seconds = int(round(seconds, 0))
         if seconds < 10:
             seconds = f"0{seconds}"
+        elif seconds == 60:
+            minutes += 1
+            seconds = 0
         return int(minutes), seconds
 
     async def difficulties_without_mods(self, beatmap):
