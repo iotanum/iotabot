@@ -9,13 +9,14 @@ class PP:
         self.star_rating = ""
         self.pp = ""
         self.accuracy = ""
+        self.acc_if_no_misses = ""
         self.possible_pp = []
 
-    async def submitted_accuracy_calc(self, get_user_recent, if_fc=False):
+    async def submitted_accuracy_calc(self, get_user_recent, if_miss=False):
         accuracy_real = (((get_user_recent.count300 * 300) + (get_user_recent.count100 * 100) +
-                          (get_user_recent.count50 * 50) + ((get_user_recent.countmiss if if_fc is False else 0) * 0)) /
+                          (get_user_recent.count50 * 50) + ((get_user_recent.countmiss if if_miss is False else 0) * 0)) /
                          ((get_user_recent.count300 + get_user_recent.count100 + get_user_recent.count50 +
-                           (get_user_recent.countmiss if if_fc is False else 0)) * 300)) * 100
+                           (get_user_recent.countmiss if if_miss is False else 0)) * 300)) * 100
 
         return round(accuracy_real, 2)
 
@@ -65,8 +66,8 @@ class PP:
         self.star_rating = round(stars.total, 2)
         n300, n100, n50 = await self.possible_score_values(self.accuracy, bmap, misses)
         self.pp = await self.calculate_pp(stars, bmap, mods, n50, n100, n300, combo, misses)
-        acc_if_fc = await self.submitted_accuracy_calc(get_user_recent, if_fc=True)
-        await self.possible_pp_calculator(acc_if_fc, bmap, stars, mods)
+        self.acc_if_no_misses = await self.submitted_accuracy_calc(get_user_recent, if_miss=True)
+        await self.possible_pp_calculator(self.acc_if_no_misses, bmap, stars, mods)
 
     async def possible_pp_calculator(self, accuracy, bmap, stars, mods):
         self.possible_pp = []

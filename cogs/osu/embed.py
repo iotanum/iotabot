@@ -52,6 +52,7 @@ class EmbedMessage:
         bpm, length = await BeatmapDiff.lenght_and_bpm(beatmap, str(score.enabled_mods))
         accuracy_string, combo_string = await self.acc_combo_line_string(score, beatmap, calculators,
                                                                          await self.text_length_calc(beatmap, score))
+        acc_no_misses = f"{calculators.acc_if_no_misses}%"
 
         embed = discord.Embed(title=beatmap.artist + " - " + beatmap.title + f" *[{beatmap.version}]*",
                               url=await self.beatmap_link(score),
@@ -65,12 +66,13 @@ class EmbedMessage:
         embed.set_thumbnail(url=pictures.beatmap_bg)
         embed.add_field(name='Beatmap',
                         value=f"\U0001f53a__{length[0]}:{length[1]}min, {bpm}bpm__\n"
-                              f"\U0001f53a``{difficulties}``",
+                              f"\U0001f53a``{difficulties}``\n"
+                              f"\U0001f53a``SS - {ss}pp, 95% - {pp95}pp, 90% - {pp90}pp``",
                         inline=False)
         embed.add_field(name=f'Score',
                         value=f"```coffeescript\n"
                               f"Accuracy - {accuracy_string}\n"
-                              f"Combo    - {combo_string},\n"
+                              f"Combo    - {combo_string}\n"
                               f"{'Miss  ' if score.countmiss == 1 else 'Misses'}   - {score.countmiss}x\n"
                               f"```",
                         inline=False)
@@ -81,7 +83,8 @@ class EmbedMessage:
                                   f"\n```",
                             inline=False)
 
-        embed.set_footer(text=f"SS - {ss}pp, 95% - {pp95}pp, 90% - {pp90}pp")
+        embed.set_footer(text=f"{score.count300}x300 / {score.count100}x100 / {score.count50}x50"
+                              f"{', accuracy w/o misses - ' + acc_no_misses if score.countmiss > 0 else ''}")
         await self.send_message(embed, channels)
 
     async def format_new_top_score(self):
