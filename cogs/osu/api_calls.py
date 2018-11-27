@@ -19,11 +19,11 @@ class Api:
             return
 
     @staticmethod
-    async def get_user_recent(user_id):
+    async def get_user_recent(user_id, limit=0):
         try:
-            get_user_recent = await osu_api.get_user_recent(user_id)
+            get_user_recent = await osu_api.get_user_recent(user_id, limit=limit + 1)
             Api.requests += 1
-            return get_user_recent[0]
+            return get_user_recent[limit]
 
         except IndexError:
             return

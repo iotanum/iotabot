@@ -13,8 +13,8 @@ class Task:
     def __init__(self, bot):
         self.bot = bot
         self.timer = {}
-        self.list_sleep = 4
-        self.per_player_sleep = 0.5
+        self.list_sleep = 6
+        self.per_player_sleep = 0.6
         self.bg_task = self.bot.loop.create_task(self.background_task())
 
     async def background_task(self):

@@ -30,8 +30,8 @@ class LatestScore:
     async def check_if_exists_in_osu(self, username):
         return await Api_call.get_user(username)
 
-    async def get_score(self, user_id):
-        return await Api_call.get_user_recent(user_id)
+    async def get_score(self, user_id, limit):
+        return await Api_call.get_user_recent(user_id, limit)
 
     async def get_beatmaps(self, beatmap_id):
         return await Api_call.get_beatmaps(beatmap_id)
@@ -63,11 +63,11 @@ class LatestScore:
         wait_select(ac.connection)
         return ac.fetchone()
 
-    async def custom_ls(self, ctx, player):
+    async def custom_ls(self, ctx, player, limit=1):
         get_user = await self.check_if_exists_in_osu(player)
         if get_user:
             user_stuff = get_user.username, get_user.user_id, get_user.pp_rank
-            await self.embed(ctx, user_stuff)
+            await self.embed(ctx, user_stuff, limit)
         else:
             await ctx.send(f"Couldn't find a player named '{player}'.")
 
@@ -103,9 +103,9 @@ class LatestScore:
                                                   get_user.pp_rank, ctx.author.id))
         wait_select(ac.connection)
 
-    async def embed(self, ctx, user_stuff):
+    async def embed(self, ctx, user_stuff, limit=1):
         username, user_id, pp_rank = user_stuff
-        recent_score = await self.get_score(user_id)
+        recent_score = await self.get_score(user_id, limit)
         if recent_score:
             beatmapset = await self.get_beatmaps(recent_score.beatmap_id)
             ls = await self.format_map_percatange_done(beatmapset, recent_score)

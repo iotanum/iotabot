@@ -152,16 +152,16 @@ class Tracking:
     @commands.cooldown(1, 1, commands.BucketType.user)
     @commands.group(brief="Shows your latest osu! score", aliases=['ls'], invoke_without_command=True,
                     name='latestscore')
-    async def latest_score(self, ctx, *, player=None):
+    async def latest_score(self, ctx, player=None, limit=1):
         ls = self.bot.get_cog("LatestScore")
         if not player:
             await ls.check_info(ctx)
         else:
             db_user = await ls.check_if_exists_in_tracked(player)
             if db_user:
-                await ls.embed(ctx, db_user)
+                await ls.embed(ctx, db_user, limit)
             else:
-                await ls.custom_ls(ctx, player)
+                await ls.custom_ls(ctx, player, limit)
 
     @latest_score.command(brief="Adds your nickname for 'ls'")
     async def set(self, ctx, *, arg):
