@@ -171,6 +171,21 @@ class Tracking:
         else:
             await ctx.send(f"{arg} does not exist.")
 
+    @commands.command(brief="Get a list of recent scores of a player")
+    async def lsl(self, ctx, username, limit=4):
+        ls = self.bot.get_cog("LatestScore")
+        user_stuff = await ls.get_list(username, limit)  # VAR referred to user object and their recent scores list
+        if user_stuff:
+            user, recents = user_stuff
+            formatted_list = await ls.format_beatmap_string(recents)
+            e = discord.Embed(title=f'Recent scores for {user.username}',
+                              description="\n".join(f"__{idx}.__ {score}"
+                                                    for idx, score in enumerate(formatted_list, 1)),
+                              colour=0x36393E)
+            await ctx.send(embed=e)
+        elif user_stuff is False:
+            await ctx.send(f"{username} has no recent scores.")
+
 
 async def total_unique_tracking():
     ac.execute("SELECT COUNT (DISTINCT username) FROM track")

@@ -19,14 +19,17 @@ class Api:
             return
 
     @staticmethod
-    async def get_user_recent(user_id, limit=0):
+    async def get_user_recent(user_id, limit=0, lslist=False):
         try:
             get_user_recent = await osu_api.get_user_recent(user_id, limit=limit + 1)
             Api.requests += 1
-            return get_user_recent[limit]
+            return get_user_recent[limit if lslist is False else None]
 
         except IndexError:
             return
+
+        except TypeError:
+            return get_user_recent
 
     @staticmethod
     async def get_beatmaps(beatmap_id):

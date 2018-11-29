@@ -4,6 +4,7 @@ import psycopg2
 import os
 from .recent_scores import Api_call
 from .embed import Calculators
+import asyncio
 
 aconn = psycopg2.connect(f'dbname={os.getenv("db")} user={os.getenv("login")} password={os.getenv("passw")}', async=1)
 wait_select(aconn)
@@ -30,8 +31,8 @@ class LatestScore:
     async def check_if_exists_in_osu(self, username):
         return await Api_call.get_user(username)
 
-    async def get_score(self, user_id, limit):
-        return await Api_call.get_user_recent(user_id, limit)
+    async def get_score(self, user_id, limit, lslist=False):
+        return await Api_call.get_user_recent(user_id, limit, lslist)
 
     async def get_beatmaps(self, beatmap_id):
         return await Api_call.get_beatmaps(beatmap_id)
@@ -94,6 +95,32 @@ class LatestScore:
             return True
         else:
             return
+
+    async def get_list(self, player, limit):
+        get_user = await self.check_if_exists_in_osu(player)
+        if get_user:
+            recents = await self.get_score(get_user.user_id, limit, lslist=True)
+            if recents:
+                return get_user, recents  # If everything is OK - return user and recent score objects
+            else:
+                return False  # Only want to handle if there are no recent scores, otherwise - ignore
+        else:
+            return
+
+    async def format_beatmap_string(self, recents):
+        scores = []
+        for recent in recents:
+            beatmap = await self.get_beatmaps(recent.beatmap_id)
+            accuracy = await Calculators.submitted_accuracy_calc(recent)
+            song_name = f"{beatmap.artist} - {beatmap.title} *[{beatmap.version}]*"
+            if str(recent.enabled_mods) == "":
+                recent.enabled_mods = "NoMod"
+            mods_and_acc = f" **+ {recent.enabled_mods}** ({accuracy}%)\n"
+            combo = f"**{recent.maxcombo}x**/({beatmap.max_combo}x) "
+            score = "{ " + f"{recent.count300} / {recent.count100} / {recent.count50} / {recent.countmiss}" + " }"
+            scores.append(song_name + "   " + mods_and_acc + combo + score)
+            await asyncio.sleep(0.2)
+        return scores
 
     # if nickname exists, update/change into a new one
     async def change_nickname(self, ctx, get_user):
