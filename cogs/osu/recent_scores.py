@@ -24,7 +24,7 @@ class SubmittedScore:
             return True
 
     async def recent_score(self, user_id, channel_id):
-        score = await Api_call.get_user_recent(user_id)
+        score = await Api_call.get_user_recent(user_id, limit=0)
         if score and await self.both_checks(score, user_id, channel_id):
             return {"score": score, "beatmap": await Api_call.get_beatmaps(score.beatmap_id)}
 
