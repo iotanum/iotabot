@@ -3,7 +3,6 @@ import asyncio
 from discord.ext import commands
 from datetime import datetime
 from .osu import api_calls, track_management
-from .osu import background_task
 
 launch_time = datetime.utcnow()
 api = api_calls.api
@@ -43,6 +42,7 @@ class Status:
             self.placeholder_state += self.api_minute_state
             if self.api_minute_state == 0:
                 await self.bot.get_cog("Task").restart()
+                print(f"Tracking has been restarted {datetime.time()}")
             await asyncio.sleep(60)
 
     @commands.cooldown(1, 1, commands.BucketType.guild)
