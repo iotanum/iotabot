@@ -38,11 +38,11 @@ class Status:
     async def last_minute_api(self):
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
-            self.api_minute_state = api.requests - self.placeholder_state
-            self.placeholder_state += self.api_minute_state
             if self.api_minute_state == 0 and api.requests != 0:
                 await self.bot.get_cog("Task").restart()
                 print(f"Tracking has been restarted {datetime.utcnow()}")
+            self.api_minute_state = api.requests - self.placeholder_state
+            self.placeholder_state += self.api_minute_state
             await asyncio.sleep(60)
 
     @commands.cooldown(1, 1, commands.BucketType.guild)
