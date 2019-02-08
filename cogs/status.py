@@ -2,8 +2,8 @@ import psutil
 import asyncio
 from discord.ext import commands
 from datetime import datetime
-from .osu import api_calls
-from .osu import track_management
+from .osu import api_calls, track_management
+from .osu import background_task
 
 launch_time = datetime.utcnow()
 api = api_calls.api
@@ -41,6 +41,8 @@ class Status:
         while not self.bot.is_closed():
             self.api_minute_state = api.requests - self.placeholder_state
             self.placeholder_state += self.api_minute_state
+            if self.api_minute_state == 0:
+                await self.bot.get_cog("Task").restart()
             await asyncio.sleep(60)
 
     @commands.cooldown(1, 1, commands.BucketType.guild)
@@ -68,7 +70,7 @@ class Status:
         await msg.add_reaction("\U0001f1f7")
 
         def check(reaction, user):
-            return user == ctx.author and reaction.emoji == "\U0001f1f7"
+            return reaction.emoji == "\U0001f1f7"
 
         try:
             reaction, user = await self.bot.wait_for("reaction_add", timeout=10.0, check=check)
