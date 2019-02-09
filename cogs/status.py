@@ -70,7 +70,7 @@ class Status:
         await msg.add_reaction("\U0001f1f7")
 
         def check(reaction, user):
-            return reaction.emoji == "\U0001f1f7"
+            return user == ctx.author and reaction.emoji == "\U0001f1f7"
 
         try:
             reaction, user = await self.bot.wait_for("reaction_add", timeout=10.0, check=check)
