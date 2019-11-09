@@ -8,10 +8,11 @@ class BeatmapDifficulities:
             if mods.find(modification) != -1:
                 return modification
 
-    async def length_calculator(self, beatmap, mods=False):
-        minutes, seconds = divmod((beatmap.total_length - (beatmap.total_length * 0.33))
-                                  if mods else beatmap.total_length, 60)
+    async def calculate_map_length(self, beatmap, multiplier):
+        length_with_multiplier = beatmap.total_length / multiplier
+        minutes, seconds = divmod(length_with_multiplier, 60)
         seconds = int(round(seconds, 0))
+
         if seconds < 10:
             seconds = f"0{seconds}"
         elif seconds == 60:
@@ -59,18 +60,23 @@ class BeatmapDifficulities:
         choices = ['AR', 'OD', 'HP', 'CS']
         return choices[counter]
 
-    async def bpm_calculator(self, bpm, mods=False):
-        return int(round(bpm * 1.5, 0)) if mods else int(bpm)
+    async def calculate_map_bpm(self, bpm, mods):
+        multiplier = await self.bpm_calculation_multipliers(mods)
+        final_map_bpm = bpm * multiplier
+        return int(round(final_map_bpm, 0)), multiplier
 
-    async def custom_check_for_calcs(self, mods):
-        modifications = ["DT", "NC", "HT", "EZ"]
-        if not [mod for mod in modifications if mod in mods]:
-            return False
-        return True
+    async def bpm_calculation_multipliers(self, mods):
+        mods_with_multipliers = ['DT', 'NC', 'HT']
+        for mod in mods_with_multipliers:
+            if 'HT' in mods:
+                return 0.75
+            elif mod in mods:
+                return 1.5
+        return 1
 
     async def lenght_and_bpm(self, beatmap, mods):
-        check = await self.custom_check_for_calcs(mods)
-        return await self.bpm_calculator(beatmap.bpm, mods=check), await self.length_calculator(beatmap, mods=check)
+        bpm, multiplier = await self.calculate_map_bpm(beatmap.bpm, mods)
+        return bpm, await self.calculate_map_length(beatmap, multiplier)
 
 
 BeatmapDiff = BeatmapDifficulities()
