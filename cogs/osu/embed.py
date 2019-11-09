@@ -49,7 +49,7 @@ class EmbedMessage:
         username, user_id, pp_rank = user_stuff
         acc_fc, ss, pp95, pp90 = calculators.possible_pp
         difficulties = await self.difficulties_string(beatmap, str(score.enabled_mods))
-        bpm, length = await BeatmapDiff.lenght_and_bpm(beatmap, str(score.enabled_mods))
+        bpm, length = await BeatmapDiff.get_map_length_and_bpm(beatmap, str(score.enabled_mods))
         accuracy_string, combo_string = await self.acc_combo_line_string(score, beatmap, calculators,
                                                                          await self.text_length_calc(beatmap, score))
         acc_no_misses = f"{calculators.acc_if_no_misses}%"
