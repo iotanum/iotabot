@@ -74,7 +74,7 @@ class BeatmapDifficulities:
                 return 1.5
         return 1
 
-    async def lenght_and_bpm(self, beatmap, mods):
+    async def get_map_length_and_bpm(self, beatmap, mods):
         bpm, multiplier = await self.calculate_map_bpm(beatmap.bpm, mods)
         return bpm, await self.calculate_map_length(beatmap, multiplier)
 
