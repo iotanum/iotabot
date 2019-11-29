@@ -1,3 +1,4 @@
+from discord.ext import commands
 import asyncio
 import aiohttp
 from .tracking_data import TrackingData as TD
@@ -7,7 +8,7 @@ import traceback
 from datetime import datetime
 
 
-class Task:
+class Task(commands.Cog):
     status = True
 
     def __init__(self, bot):

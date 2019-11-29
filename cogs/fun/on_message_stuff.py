@@ -1,8 +1,9 @@
+from discord.ext import commands
 import asyncio
 import random
 
 
-class OnMsg:
+class OnMsg(commands.Cog):
     counter = 0
     messages_until = 100
 

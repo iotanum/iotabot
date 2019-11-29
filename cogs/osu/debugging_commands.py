@@ -3,7 +3,7 @@ import asyncio
 from .tracking_data import TrackingData as TD
 
 
-class Debugging:
+class Debugging(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.get_cog()

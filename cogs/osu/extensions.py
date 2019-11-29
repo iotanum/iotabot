@@ -1,4 +1,7 @@
-class OsuExtensions:
+from discord.ext import commands
+
+
+class OsuExtensions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.add_osu_cogs()

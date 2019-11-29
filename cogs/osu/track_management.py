@@ -12,7 +12,7 @@ wait_select(aconn)
 ac = aconn.cursor()
 
 
-class Tracking:
+class Tracking(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

@@ -4,7 +4,7 @@ import random
 from .get_avatar import GetAvatar
 
 
-class Fun:
+class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

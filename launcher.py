@@ -17,6 +17,7 @@ if __name__ == '__main__':
             bot.load_extension(extension)
 
         except Exception as e:
+            print(e)
             print(f'Failed to load extension "{extension}"')
 
 

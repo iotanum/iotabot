@@ -1,4 +1,6 @@
-class FunExtensions:
+from discord.ext import commands
+
+class FunExtensions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.add_fun_cogs()

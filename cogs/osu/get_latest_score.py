@@ -11,7 +11,7 @@ wait_select(aconn)
 ac = aconn.cursor()
 
 
-class LatestScore:
+class LatestScore(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

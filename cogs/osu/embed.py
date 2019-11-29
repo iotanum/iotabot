@@ -1,5 +1,8 @@
 import discord
+from discord.ext import commands
+
 import asyncio
+
 from .performance_points import Calculators
 from .pictures import Pictures
 from .after_play_changes import AfterSubmit
@@ -7,7 +10,7 @@ from .beatmap_difficulities import BeatmapDiff
 from .new_top_score import NewScore
 
 
-class EmbedMessage:
+class EmbedMessage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

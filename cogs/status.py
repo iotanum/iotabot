@@ -8,7 +8,7 @@ launch_time = datetime.utcnow()
 api = api_calls.api
 
 
-class Status:
+class Status(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.api_minute_state = 0
