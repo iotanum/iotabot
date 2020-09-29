@@ -26,6 +26,3 @@ class Pics:
     async def get_pics(self, user_id, beatmapset_id):
         await self.execute_all(user_id, beatmapset_id)
 
-
-Pictures = Pics()
-

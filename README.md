@@ -44,4 +44,5 @@ discord_token='' # your discord api token
 db='' # your PostgreSQL database name
 login='' # your PostgreSQL database login
 passw='' # your PostgreSQL database password
+command_prefix='' # your bot command prefix symbol
 ```

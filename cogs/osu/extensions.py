@@ -7,10 +7,10 @@ class OsuExtensions(commands.Cog):
         self.add_osu_cogs()
 
     def add_osu_cogs(self):
-        extensions = ['cogs.osu.track_management',
-                      'cogs.osu.embed',
-                      'cogs.osu.get_latest_score',
+        extensions = ['cogs.osu.embed',
                       'cogs.osu.background_task',
+                      'cogs.osu.tracking_commands',
+                      'cogs.osu.get_latest_score',
                       'cogs.osu.debugging_commands']
 
         for extension in extensions:
@@ -18,7 +18,7 @@ class OsuExtensions(commands.Cog):
                 self.bot.load_extension(extension)
 
             except Exception as e:
-                print(f'Failed to load extension "{extension}"')
+                print(f'Failed to load extension "{extension}", {e}')
 
 
 def setup(bot):

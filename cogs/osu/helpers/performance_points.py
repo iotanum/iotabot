@@ -1,11 +1,10 @@
 import aiohttp
 import pyttanko
 
-p = pyttanko.parser()
-
 
 class PP:
     def __init__(self):
+        self.beatmap_parser = pyttanko.parser()
         self.star_rating = ""
         self.pp = ""
         self.accuracy = ""
@@ -31,7 +30,7 @@ class PP:
         return data
 
     async def parse_beatmap_file(self, beatmap_id):
-        return await p.map(await self.beatmap_file(beatmap_id))
+        return await self.beatmap_parser.map(await self.beatmap_file(beatmap_id))
 
     async def submitted_play_stuff(self, get_user_recent):
         if str(get_user_recent.enabled_mods) == 'NoMod':
@@ -75,5 +74,3 @@ class PP:
             n300, n100, n50 = await self.possible_score_values(acc, bmap, 0)
             self.possible_pp.append(await self.calculate_pp(stars, bmap, mods, n50, n100, n300, await bmap.max_combo(), 0))
 
-
-Calculators = PP()

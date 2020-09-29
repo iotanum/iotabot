@@ -53,5 +53,3 @@ class Api:
     async def reset_api_calls(self):
         Api.requests = 0
 
-
-api = Api()

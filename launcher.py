@@ -1,14 +1,24 @@
 from discord.ext import commands
+import psycopg2
+from psycopg2.extras import wait_select
 from dotenv import load_dotenv
+
 import os
 import asyncio
 
 load_dotenv("vars.env")
-bot = commands.Bot(command_prefix='>')
+bot = commands.Bot(command_prefix=os.getenv("command_prefix"))
 initial_extensions = ['cogs.osu.extensions',
                       'cogs.fun.extensions',
                       'cogs.status',
                       'cogs.command_error_handle']
+
+
+def load_database():
+    aconn = psycopg2.connect(f'dbname={os.getenv("db")} user={os.getenv("login")} password={os.getenv("passw")}',
+                             async=1)
+    wait_select(aconn)
+    return aconn.cursor()
 
 
 if __name__ == '__main__':
@@ -19,6 +29,9 @@ if __name__ == '__main__':
         except Exception as e:
             print(e)
             print(f'Failed to load extension "{extension}"')
+
+    bot.db = load_database()
+    bot.run(os.getenv("discord_token"), bot=True, reconnect=True)
 
 
 @commands.is_owner()
@@ -68,5 +81,3 @@ async def on_ready():
     print(f'Logged in as: {bot.user.name} - {bot.user.id}')
     print("----------------------------------------------------\n")
 
-
-bot.run(os.getenv("discord_token"), bot=True, reconnect=True)
