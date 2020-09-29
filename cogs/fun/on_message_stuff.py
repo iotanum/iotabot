@@ -10,6 +10,7 @@ class OnMsg(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
     async def on_message(self, message):
         await self.on_message_no_bot(message)
         await self.random_response(message)

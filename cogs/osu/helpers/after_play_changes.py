@@ -1,26 +1,24 @@
 from psycopg2.extras import wait_select
-import psycopg2
-import os
-from .tracking_data import TrackingData as TD
-from .api_calls import api
 
-aconn = psycopg2.connect(f'dbname={os.getenv("db")} user={os.getenv("login")} password={os.getenv("passw")}', async=1)
-wait_select(aconn)
+from .api_calls import Api
+from .database_management import Database
 
 
-class Changes:
-    def __init__(self):
+class AfterSubmitChanges:
+    def __init__(self, bot):
+        self.bot = bot
+        self.database = Database(self.bot)
+        self.osu_api = Api()
         self.new_stuff = ""
 
-    async def get_current_data(self, user_id):
-        ac = aconn.cursor()
-        ac.execute("SELECT pp_raw, accuracy, pp_rank, pp_country_rank FROM track WHERE user_id = %s", (user_id, ))
-        wait_select(ac.connection)
-        c_pp, c_acc, c_rank, c_c_rank = ac.fetchone()
+    async def get_current_player_info(self, user_id):
+        self.bot.db.execute("SELECT pp_raw, accuracy, pp_rank, pp_country_rank FROM track WHERE user_id = %s", (user_id, ))
+        wait_select(self.bot.db.connection)
+        c_pp, c_acc, c_rank, c_c_rank = self.bot.db.fetchone()
         return float(c_pp), float(c_acc), int(c_rank), int(c_c_rank)
 
     async def after_submit_data(self, user_id):
-        get_user = await api.get_user(int(user_id))
+        get_user = await self.osu_api.get_user(int(user_id))
         pp = get_user.pp_raw
         accuracy = round(get_user.accuracy, 2)
         pp_rank = get_user.pp_rank
@@ -28,7 +26,7 @@ class Changes:
         return pp, accuracy, pp_rank, country_rank
 
     async def format_data(self, user_id):
-        return {"current": await self.get_current_data(user_id), "new": await self.after_submit_data(user_id)}
+        return {"current": await self.get_current_player_info(user_id), "new": await self.after_submit_data(user_id)}
 
     async def calc_changes(self, user_id):
         self.new_stuff = ""
@@ -53,11 +51,10 @@ class Changes:
 
     async def update_if_anything_changed(self, user_id, new_data):
         pp, acc, rank, c_rank = new_data
-        ac = aconn.cursor()
-        ac.execute("UPDATE track SET pp_raw = %s, accuracy = %s, pp_rank = %s, pp_country_rank = %s"
-                   " WHERE user_id = %s", (pp, acc, rank, c_rank, user_id))
-        wait_select(ac.connection)
-        await TD.update_list()
+        self.bot.db.execute("UPDATE track SET pp_raw = %s, accuracy = %s, pp_rank = %s, pp_country_rank = %s"
+                            " WHERE user_id = %s", (pp, acc, rank, c_rank, user_id))
+        wait_select(self.bot.db.connection)
+        await self.database.update_list()
 
     async def text_format_if_changed(self, changes):
         for idx, var in enumerate(changes):
@@ -73,5 +70,3 @@ class Changes:
         choices = ["pp", "%", " ranks", " country ranks"]
         return choices[idx]
 
-
-AfterSubmit = Changes()

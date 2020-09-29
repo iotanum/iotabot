@@ -1,7 +1,10 @@
-from .performance_points import Calculators
+from .performance_points import PP
 
 
-class BeatmapDifficulities:
+class BeatmapDifficulty:
+    def __init__(self):
+        self.beatmap_calculator = PP()
+
     async def beatmap_mod_check(self, mods):
         possible_modifications = ["DT", "NC", "HT", "HR", "EZ"]
         for modification in possible_modifications:
@@ -26,7 +29,8 @@ class BeatmapDifficulities:
 
     async def difficulties_with_mods(self, beatmap, mods):
         default_difficulties = await self.difficulties_without_mods(beatmap)
-        speed_multi, ar, od, cs, hp = await Calculators.beatmap_difficulity_with_mods(mods, default_difficulties)
+        speed_multi, ar, od, cs, hp = await self.beatmap_calculator.beatmap_difficulity_with_mods(mods,
+                                                                                                  default_difficulties)
         return await self.types_change([round(ar, 2), round(od, 2), round(hp, 2), round(cs, 2)])
 
     async def type_check(self, diff):
@@ -78,5 +82,3 @@ class BeatmapDifficulities:
         bpm, multiplier = await self.calculate_map_bpm(beatmap.bpm, mods)
         return bpm, await self.calculate_map_length(beatmap, multiplier)
 
-
-BeatmapDiff = BeatmapDifficulities()

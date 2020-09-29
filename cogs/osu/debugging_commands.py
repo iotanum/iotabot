@@ -1,15 +1,15 @@
 from discord.ext import commands
+
+from .helpers.database_management import Database
+
 import asyncio
-from .tracking_data import TrackingData as TD
 
 
 class Debugging(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.get_cog()
-
-    def get_cog(self):
-        self.tm = self.bot.get_cog('Tracking')
+        self.database = Database(self.bot)
+        self.tracked_players = self.database.players
         self.task = self.bot.get_cog('Task')
 
     @commands.is_owner()
@@ -21,8 +21,8 @@ class Debugging(commands.Cog):
     @debug.command()
     async def list(self, ctx):
         user_list = ""
-        for idx, username in enumerate(TD.tracked_players, 1):
-            pi = TD.tracked_players[username]
+        for idx, username in enumerate(self.tracked_players, 1):
+            pi = self.tracked_players.tracked_players[username]
             channels = list(channel for channel in pi['channels'])
             user_list += f"{idx}. {username}, tracking in: {channels}, online: {pi['online']}\n"
         await ctx.send(f"```{user_list}```")
@@ -32,21 +32,10 @@ class Debugging(commands.Cog):
         usernames = arg.split(", ")
         await ctx.send(f"This will take about *{len(usernames) * 3 + 3}* seconds..")
         for username in usernames:
-            get_user = await self.tm.osu_player_check(username)
-            await self.tm.add_player(ctx.guild.id, ctx.channel.id, get_user)
+            get_user = await self.database.osu_player_check(username)
+            await self.database.add_player(ctx.guild.id, ctx.channel.id, get_user)
             await asyncio.sleep(3)
         await ctx.send(f"Added {usernames}")
-
-    @debug.command()
-    async def starttrack(self, ctx):
-        if not self.task.status:
-            await self.task.start_task()
-            await ctx.message.add_reaction("\U00002705")
-
-    @debug.command()
-    async def stoptrack(self, ctx):
-        await self.task.stop_task()
-        await ctx.message.add_reaction("\U00002705")
 
     @debug.group()
     async def sleep(self, ctx):
