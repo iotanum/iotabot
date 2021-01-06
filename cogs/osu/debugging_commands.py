@@ -3,6 +3,7 @@ from discord.ext import commands
 from .helpers.database_management import Database
 
 import asyncio
+from requests import get
 
 
 class Debugging(commands.Cog):
@@ -36,6 +37,14 @@ class Debugging(commands.Cog):
             await self.database.add_player(ctx.guild.id, ctx.channel.id, get_user)
             await asyncio.sleep(3)
         await ctx.send(f"Added {usernames}")
+
+    @commands.command(name='ip')
+    async def give_ip(self, ctx):
+        qonquest_id = 106747781552562176
+
+        if ctx.message.author.id == qonquest_id or await self.bot.is_owner(ctx.message.author):
+            ip = get('https://api.ipify.org').text
+            await ctx.message.author.send(f"{ip}")
 
     @debug.group()
     async def sleep(self, ctx):

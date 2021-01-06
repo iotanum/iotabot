@@ -2,6 +2,7 @@ from discord.ext import tasks, commands
 import asyncio
 import aiohttp
 import discord
+import osuapi
 
 from .helpers.database_management import Database
 from cogs.osu.helpers.recent_scores import SubmittedScore
@@ -71,7 +72,7 @@ class Task(commands.Cog):
 
                     await asyncio.sleep(self.per_player_sleep)
 
-        except (aiohttp.client_exceptions.ClientConnectionError, RuntimeError, asyncio.TimeoutError):
+        except (aiohttp.client_exceptions.ClientConnectionError, RuntimeError, asyncio.TimeoutError, osuapi.errors.HTTPError):
             pass
 
         except Exception as e:
