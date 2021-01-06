@@ -4,3 +4,4 @@ psutil
 psycopg2
 python-dotenv
 pyttanko
+requests

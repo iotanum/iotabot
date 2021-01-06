@@ -1,4 +1,5 @@
 from discord.ext import commands
+from requests import get
 
 from .helpers.database_management import Database
 
@@ -51,6 +52,14 @@ class Debugging(commands.Cog):
     async def per_player(self, ctx, seconds: float):
         self.task.per_player_sleep = seconds
         await ctx.message.add_reaction("\U00002705")
+
+    @commands.command(name='ip')
+    async def give_ip(self, ctx):
+        qonquest_id = 106747781552562176
+
+        if ctx.message.author.id == qonquest_id or await self.bot.is_owner(ctx.message.author):
+            ip = get('https://api.ipify.org').text
+            await ctx.message.author.send(f"{ip}")
 
 
 def setup(bot):
