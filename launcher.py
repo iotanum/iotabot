@@ -16,8 +16,8 @@ initial_extensions = ['cogs.osu.extensions',
 
 
 def load_database():
-    aconn = psycopg2.connect(f'dbname={os.getenv("db")} user={os.getenv("login")} password={os.getenv("passw")}',
-                             async=1)
+    aconn = psycopg2.connect(dbname=os.getenv("db"), user=os.getenv("login"),
+                             password=os.getenv("passw"), async_=True)
     wait_select(aconn)
     return aconn.cursor()
 
