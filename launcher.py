@@ -11,7 +11,8 @@ bot = commands.Bot(command_prefix=os.getenv("command_prefix"))
 initial_extensions = ['cogs.osu.extensions',
                       'cogs.fun.extensions',
                       'cogs.status',
-                      'cogs.command_error_handle']
+                      'cogs.command_error_handle',
+                      'cogs.http_server']
 
 
 def load_database():
@@ -24,6 +25,7 @@ def load_database():
 if __name__ == '__main__':
     for extension in initial_extensions:
         try:
+            print(f"loading {extension}")
             bot.load_extension(extension)
 
         except Exception as e:
