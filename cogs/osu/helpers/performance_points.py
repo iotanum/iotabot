@@ -61,18 +61,11 @@ class PP:
         ar, od, hp, cs = beatmap_default
         return await pyttanko.mods_apply(mods_from_str, ar=ar, od=od, cs=cs, hp=hp)
 
-    async def calc_stars_total(self, beatmap):
-        # 50% of the difference between aim and speed is added to
-        # star rating to compensate aim only or speed only maps
-        EXTREME_SCALING_FACTOR = 0.5
-        return (abs(beatmap.diff_speed - beatmap.diff_aim) * EXTREME_SCALING_FACTOR) \
-               + (beatmap.diff_aim + beatmap.diff_speed)
-
     async def calculator(self, get_user_recent, beatmap):
         mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
         self.accuracy = await self.submitted_accuracy_calc(get_user_recent)
 
-        stars_total = await self.calc_stars_total(beatmap)
+        stars_total = beatmap.rating
         stars = dict()
         stars['aim'] = beatmap.diff_aim
         stars['speed'] = beatmap.diff_speed
