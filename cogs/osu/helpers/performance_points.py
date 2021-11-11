@@ -20,8 +20,9 @@ class PP:
         return round(accuracy_real, 2)
 
     # needed for the pyttanko pp calc for accurate pepes
-    async def possible_score_values(self, accuracy, parsed_beatmap, misses):
-        n300, n100, n50 = await pyttanko.acc_round(accuracy, len(parsed_beatmap.hitobjects), misses)
+    async def possible_score_values(self, accuracy, beatmap, misses):
+        hit_objects = beatmap.count_slider + beatmap.count_normal + beatmap.count_spinner
+        n300, n100, n50 = await pyttanko.acc_round(accuracy, hit_objects, misses)
         return n300, n100, n50
 
     async def beatmap_file(self, beatmap_id):
@@ -45,7 +46,11 @@ class PP:
         return await pyttanko.mods_from_str(str(mods))
 
     async def calculate_pp(self, stars, bmap, mods, n50, n100, n300, combo, misses):
-        calc = await pyttanko.ppv2(stars.aim, stars.speed, bmap=bmap, mods=mods, n50=n50,
+        calc = await pyttanko.ppv2(stars['aim'], stars['speed'], max_combo=bmap.max_combo,
+                                   nsliders=bmap.count_slider, ncircles=bmap.count_normal,
+                                   nobjects=(bmap.count_slider + bmap.count_normal + bmap.count_spinner),
+                                   base_ar=bmap.diff_approach, base_od=bmap.diff_overall,
+                                   mods=mods, n50=n50,
                                    n100=n100, n300=n300, combo=combo, nmiss=misses)
         pp = round(calc[0], 2)
         return pp
@@ -56,21 +61,33 @@ class PP:
         ar, od, hp, cs = beatmap_default
         return await pyttanko.mods_apply(mods_from_str, ar=ar, od=od, cs=cs, hp=hp)
 
-    async def calculator(self, get_user_recent):
+    async def calc_stars_total(self, beatmap):
+        # 50% of the difference between aim and speed is added to
+        # star rating to compensate aim only or speed only maps
+        EXTREME_SCALING_FACTOR = 0.5
+        return (abs(beatmap.diff_speed - beatmap.diff_aim) * EXTREME_SCALING_FACTOR) \
+               + (beatmap.diff_aim + beatmap.diff_speed)
+
+    async def calculator(self, get_user_recent, beatmap):
         mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
         self.accuracy = await self.submitted_accuracy_calc(get_user_recent)
-        bmap = await self.parse_beatmap_file(get_user_recent.beatmap_id)
+
+        stars_total = await self.calc_stars_total(beatmap)
+        stars = dict()
+        stars['aim'] = beatmap.diff_aim
+        stars['speed'] = beatmap.diff_speed
+        # bmap = await self.parse_beatmap_file(get_user_recent.beatmap_id)
         mods = await self.submitted_play_mods(mods)
-        stars = await self.submitted_play_star_calc(bmap, mods)
-        self.star_rating = round(stars.total, 2)
-        n300, n100, n50 = await self.possible_score_values(self.accuracy, bmap, misses)
-        self.pp = await self.calculate_pp(stars, bmap, mods, n50, n100, n300, combo, misses)
+        # stars = await self.submitted_play_star_calc(bmap, mods)
+        self.star_rating = round(stars_total, 2)
+        n300, n100, n50 = await self.possible_score_values(self.accuracy, beatmap, misses)
+        self.pp = await self.calculate_pp(stars, beatmap, mods, n50, n100, n300, combo, misses)
         self.acc_if_no_misses = await self.submitted_accuracy_calc(get_user_recent, if_miss=True)
-        await self.possible_pp_calculator(self.acc_if_no_misses, bmap, stars, mods)
+        await self.possible_pp_calculator(self.acc_if_no_misses, beatmap, stars, mods)
 
     async def possible_pp_calculator(self, accuracy, bmap, stars, mods):
         self.possible_pp = []
         for acc in accuracy, 100, 95, 90:
             n300, n100, n50 = await self.possible_score_values(acc, bmap, 0)
-            self.possible_pp.append(await self.calculate_pp(stars, bmap, mods, n50, n100, n300, await bmap.max_combo(), 0))
+            self.possible_pp.append(await self.calculate_pp(stars, bmap, mods, n50, n100, n300, bmap.max_combo, 0))
 

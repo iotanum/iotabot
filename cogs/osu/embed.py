@@ -27,8 +27,9 @@ class EmbedMessage(commands.Cog):
             await self.after_submit_changes.calc_changes(user_id)
             if self.after_submit_changes.new_stuff:
                 await self.new_top_play.check_for_new_play(user_id)
+
         await self.pictures.get_pics(user_id, beatmap.beatmapset_id)
-        await self.beatmap_calculator.calculator(score)
+        await self.beatmap_calculator.calculator(score, beatmap)
         if str(score.enabled_mods) == '':
             score.enabled_mods = "NoMod"
 
