@@ -65,7 +65,7 @@ class PP:
         mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
         self.accuracy = await self.submitted_accuracy_calc(get_user_recent)
 
-        stars_total = beatmap.rating
+        stars_total = beatmap.difficultyrating
         stars = dict()
         stars['aim'] = beatmap.diff_aim
         stars['speed'] = beatmap.diff_speed
