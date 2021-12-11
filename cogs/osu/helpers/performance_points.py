@@ -16,11 +16,12 @@ class PP:
         map_id = {"map_id": beatmap.beatmap_id}
         mods = [mods[i:i+2] for i in range(0, len(mods), 2)]
         mods = {"mods": mods}
+        combo_stuff = {"good": score['100'], 'meh': score['50']}
         misses = {"miss": score['miss']}
         combo = {"combo": score['combo']}
         rework = {"rework": "xexxar_skills"}
 
-        payload = {**map_id, **mods, **misses, **combo, **rework}
+        payload = {**map_id, **mods, **combo_stuff, **misses, **combo, **rework}
         return json.dumps(payload)
 
     async def send_request(self, payload):
@@ -88,16 +89,13 @@ class PP:
         mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
         # self.accuracy = await self.submitted_accuracy_calc(get_user_recent)
         # mods = await self.submitted_play_mods(mods)
-        score = {"mods": mods, "combo": combo, "miss": misses}
+        score = {"mods": mods, "combo": combo, "miss": misses, "300": get_user_recent.count300,
+                 "100": get_user_recent.count100, "50": get_user_recent.count50}
         json_payload = await self.format_payload(beatmap, mods, score)
         calcd_score = await self.send_request(json_payload)
         self.accuracy = round(calcd_score['accuracy'], 2)
-        # stars_total = beatmap.difficultyrating
-        # stars = dict()
-        # stars['aim'] = beatmap.diff_aim
-        # stars['speed'] = beatmap.diff_speed
-        # bmap = await self.parse_beatmap_file(get_user_recent.beatmap_id)
 
+        # bmap = await self.parse_beatmap_file(get_user_recent.beatmap_id)
         # stars = await self.submitted_play_star_calc(bmap, mods)
         # self.star_rating = round(stars_total, 2)
         # n300, n100, n50 = await self.possible_score_values(self.accuracy, beatmap, misses)
