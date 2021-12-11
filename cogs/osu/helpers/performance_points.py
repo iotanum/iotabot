@@ -30,6 +30,7 @@ class PP:
                                    data=payload, connector=connector,
                                    headers=headers) as response:
             data = await response.json()
+            print(data)
             await connector.close()
         return data
 
@@ -90,7 +91,7 @@ class PP:
         score = {"mods": mods, "combo": combo, "miss": misses}
         json_payload = await self.format_payload(beatmap, mods, score)
         calcd_score = await self.send_request(json_payload)
-        print(calcd_score)
+        self.accuracy = round(calcd_score['accuracy'], 2)
         # stars_total = beatmap.difficultyrating
         # stars = dict()
         # stars['aim'] = beatmap.diff_aim
