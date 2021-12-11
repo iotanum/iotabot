@@ -116,6 +116,8 @@ class PP:
             n300, n100, n50 = await self.possible_score_values(acc, bmap, 0)
             score['100'] = n100
             score['50'] = n50
+            score['miss'] = 0
+            print(score, "possible score")
             json_payload = await self.format_payload(bmap, mods, score)
             calcd_score = await self.send_request(json_payload)
             pp = round(calcd_score['local_pp'], 2)
