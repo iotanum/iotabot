@@ -111,5 +111,5 @@ class PP:
         self.possible_pp = []
         for acc in accuracy, 100, 95, 90:
             n300, n100, n50 = await self.possible_score_values(acc, bmap, 0)
-            self.possible_pp.append(await self.calculate_pp(stars, bmap, mods, n50, n100, n300, bmap.max_combo, 0))
-
+            pp = round(await self.calculate_pp(stars, bmap, mods, n50, n100, n300, bmap.max_combo, 0), 2)
+            self.possible_pp.append(pp)
