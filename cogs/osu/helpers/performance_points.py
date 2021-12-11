@@ -118,6 +118,7 @@ class PP:
                 score['100'] = n100
                 score['50'] = n50
                 score['miss'] = 0
+                score['combo'] = bmap.max_combo
                 print(score, "possible score")
                 json_payload = await self.format_payload(bmap, mods, score)
                 calcd_score = await self.send_request(json_payload)
