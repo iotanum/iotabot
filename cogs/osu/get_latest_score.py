@@ -46,7 +46,7 @@ class LatestScore(commands.Cog):
     async def calculate_map_percentage_done(self, beatmap, recent_score):
         try:
             return (round((await self.count_recent_objects(recent_score)
-                           / await self.beatmap_objects(beatmap)) * 100, 2)) \
+                           / beatmap.max_combo) * 100, 2)) \
                 if str(recent_score.rank) == "F" else 100
         except ZeroDivisionError:
             return 0

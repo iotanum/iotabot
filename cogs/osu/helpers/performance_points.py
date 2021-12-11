@@ -1,5 +1,6 @@
 import aiohttp
 import pyttanko
+import json
 
 
 class PP:
@@ -10,6 +11,27 @@ class PP:
         self.accuracy = ""
         self.acc_if_no_misses = ""
         self.possible_pp = []
+
+    async def format_payload(self, beatmap, mods, score):
+        map_id = {"map_id": beatmap.beatmap_id}
+        mods = [mods[i:i+2] for i in range(0, len(mods), 2)]
+        mods = {"mods": mods}
+        misses = {"miss": score['miss']}
+        combo = {"combo": score['combo']}
+        rework = {"rework": "xexxar_skills"}
+
+        payload = {**map_id, **mods, **misses, **combo, **rework}
+        return json.dumps(payload)
+
+    async def send_request(self, payload):
+        connector = aiohttp.TCPConnector(verify_ssl=False)
+        headers = {"Content-Type": "application/json"}
+        async with aiohttp.request('PATCH', f"https://pp-api.huismetbenen.nl/calculate-score",
+                                   data=payload, connector=connector,
+                                   headers=headers) as response:
+            data = await response.json()
+            await connector.close()
+        return data
 
     async def submitted_accuracy_calc(self, get_user_recent, if_miss=False):
         accuracy_real = (((get_user_recent.count300 * 300) + (get_user_recent.count100 * 100) +
@@ -63,20 +85,28 @@ class PP:
 
     async def calculator(self, get_user_recent, beatmap):
         mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
-        self.accuracy = await self.submitted_accuracy_calc(get_user_recent)
-
-        stars_total = beatmap.difficultyrating
-        stars = dict()
-        stars['aim'] = beatmap.diff_aim
-        stars['speed'] = beatmap.diff_speed
+        # self.accuracy = await self.submitted_accuracy_calc(get_user_recent)
+        # mods = await self.submitted_play_mods(mods)
+        score = {"mods": mods, "combo": combo, "miss": misses}
+        json_payload = await self.format_payload(beatmap, mods, score)
+        calcd_score = await self.send_request(json_payload)
+        print(calcd_score)
+        # stars_total = beatmap.difficultyrating
+        # stars = dict()
+        # stars['aim'] = beatmap.diff_aim
+        # stars['speed'] = beatmap.diff_speed
         # bmap = await self.parse_beatmap_file(get_user_recent.beatmap_id)
-        mods = await self.submitted_play_mods(mods)
+
         # stars = await self.submitted_play_star_calc(bmap, mods)
-        self.star_rating = round(stars_total, 2)
-        n300, n100, n50 = await self.possible_score_values(self.accuracy, beatmap, misses)
-        self.pp = await self.calculate_pp(stars, beatmap, mods, n50, n100, n300, combo, misses)
+        # self.star_rating = round(stars_total, 2)
+        # n300, n100, n50 = await self.possible_score_values(self.accuracy, beatmap, misses)
+        self.pp = round(calcd_score['local_pp'], 2)
+        self.star_rating = round(calcd_score['newSR'], 2)
+        stars_pyy = {"aim": calcd_score['aim_pp'], "speed": calcd_score['tap_pp']}
+        mods_pyy = await self.submitted_play_mods(mods)
+        # self.pp = await self.calculate_pp(stars, beatmap, mods, n50, n100, n300, combo, misses)
         self.acc_if_no_misses = await self.submitted_accuracy_calc(get_user_recent, if_miss=True)
-        await self.possible_pp_calculator(self.acc_if_no_misses, beatmap, stars, mods)
+        await self.possible_pp_calculator(self.acc_if_no_misses, beatmap, stars_pyy, mods_pyy)
 
     async def possible_pp_calculator(self, accuracy, bmap, stars, mods):
         self.possible_pp = []
