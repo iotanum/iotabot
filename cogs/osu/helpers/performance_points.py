@@ -99,17 +99,24 @@ class PP:
         # stars = await self.submitted_play_star_calc(bmap, mods)
         # self.star_rating = round(stars_total, 2)
         # n300, n100, n50 = await self.possible_score_values(self.accuracy, beatmap, misses)
+
         self.pp = round(calcd_score['local_pp'], 2)
         self.star_rating = round(calcd_score['newSR'], 2)
-        stars_pyy = {"aim": calcd_score['aim_pp'], "speed": calcd_score['tap_pp']}
-        mods_pyy = await self.submitted_play_mods(mods)
-        # self.pp = await self.calculate_pp(stars, beatmap, mods, n50, n100, n300, combo, misses)
-        self.acc_if_no_misses = await self.submitted_accuracy_calc(get_user_recent, if_miss=True)
-        await self.possible_pp_calculator(self.acc_if_no_misses, beatmap, stars_pyy, mods_pyy)
 
-    async def possible_pp_calculator(self, accuracy, bmap, stars, mods):
+        # stars_pyy = {"aim": calcd_score['aim_pp'], "speed": calcd_score['tap_pp']}
+        # mods_pyy = await self.submitted_play_mods(mods)
+        # self.pp = await self.calculate_pp(stars, beatmap, mods, n50, n100, n300, combo, misses)
+
+        self.acc_if_no_misses = await self.submitted_accuracy_calc(get_user_recent, if_miss=True)
+        await self.possible_pp_calculator(self.acc_if_no_misses, beatmap, mods, score)
+
+    async def possible_pp_calculator(self, accuracy, bmap, mods, score):
         self.possible_pp = []
         for acc in accuracy, 100, 95, 90:
             n300, n100, n50 = await self.possible_score_values(acc, bmap, 0)
-            pp = round(await self.calculate_pp(stars, bmap, mods, n50, n100, n300, bmap.max_combo, 0), 2)
+            score['100'] = n100
+            score['50'] = n50
+            json_payload = await self.format_payload(bmap, mods, score)
+            calcd_score = await self.send_request(json_payload)
+            pp = round(calcd_score['local_pp'], 2)
             self.possible_pp.append(pp)
