@@ -39,7 +39,7 @@ class Task(commands.Cog):
         creator_discord_id = 450567441437687818
         try:
             await self.bot.get_user(creator_discord_id).send(f"```{traceback.format_exc()}```\n")
-        except discord.errors.HTTPException:
+        except (discord.errors.HTTPException, AttributeError):
             traceback_error = traceback.format_exc().split('Traceback')
             api_response = traceback_error[0][-1000:]
             print(len(api_response), "error", 1)
