@@ -1,3 +1,5 @@
-docker-compose up --build -d
-docker image prune -f
-docker container prune -f
+#/bin/bash
+
+sudo docker-compose up --build -d
+sudo docker image prune -f
+sudo docker container prune -f

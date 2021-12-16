@@ -2,6 +2,7 @@
 version: '3.3'
 services:
   iotabot:
+    privileged: true
     build:
       context: .
       dockerfile: Dockerfile
@@ -19,6 +20,7 @@ services:
     restart: always
 
   autoheal:
+    privileged: true
     image: willfarrell/autoheal
     container_name: autoheal
     volumes:
