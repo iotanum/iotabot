@@ -1,9 +1,11 @@
 from discord.ext import commands
-import aiohttp
-from aiohttp import web
 import discord
 
+import aiohttp
+from aiohttp import web
+
 import os
+import json
 
 
 HTTP_SERVER_PORT = os.getenv("HTTP_SERVER_PORT")
@@ -65,6 +67,13 @@ class HTTPServer(commands.Cog):
         async def get_handler(request):
             return web.Response(text=f"{self.bot.user.name}")
 
+        async def get_status(request):
+            last_min_state = self.bot.get_cog('Status').api_minute_state
+            resp = {"healthy": True if last_min_state > 0 else False}
+            resp_status = 200 if last_min_state > 0 else 503
+
+            return web.json_response(resp, status=resp_status)
+
         async def post_handler(request):
             await invoke_bot_command(request)
             return web.Response(status=200)
@@ -72,6 +81,7 @@ class HTTPServer(commands.Cog):
         app = web.Application()
         app.router.add_get("/verification", get_handler)
         app.router.add_post("/verification", post_handler)
+        app.router.add_get("/status", get_status)
 
         runner = aiohttp.web.AppRunner(app)
         await runner.setup()
