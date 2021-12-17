@@ -19,7 +19,7 @@ class PP:
         combo_stuff = {"good": score['100'], 'meh': score['50']}
         misses = {"miss": score['miss']}
         combo = {"combo": score['combo']}
-        rework = {"rework": "xexxar_skills"}
+        rework = {"rework": "live"}
 
         payload = {**map_id, **mods, **combo_stuff, **misses, **combo, **rework}
         return json.dumps(payload)
