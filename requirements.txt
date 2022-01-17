@@ -6,3 +6,4 @@ python-dotenv
 pyttanko
 requests
 aiohttp
+requests_html

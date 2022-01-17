@@ -10,6 +10,7 @@ load_dotenv("vars.env")
 bot = commands.Bot(command_prefix=os.getenv("command_prefix"))
 initial_extensions = ['cogs.osu.extensions',
                       'cogs.fun.extensions',
+                      'cogs.gw.commands',
                       'cogs.status',
                       'cogs.command_error_handle',
                       'cogs.http_server']
