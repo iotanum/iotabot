@@ -4,7 +4,7 @@ import discord
 from .gbf_wiki import GbfWiki
 
 
-class Commands(commands.Cog):
+class GbfCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.gbf_wiki = GbfWiki()
@@ -35,4 +35,4 @@ class Commands(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Commands(bot))
+    bot.add_cog(GbfCommands(bot))
