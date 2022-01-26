@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      network: host
     labels:
       "autoheal": "true"
 #    ports:
@@ -17,7 +18,7 @@ services:
       retries: 10
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    network_mode: "host"
+    network_mode: host
     image: iotabot
     restart: always
 
