@@ -8,8 +8,8 @@ services:
       dockerfile: Dockerfile
     labels:
       "autoheal": "true"
-    ports:
-      - 8090:8090
+#    ports:
+#      - 8090:8090
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8090/status"]
       interval: 10s
@@ -17,6 +17,7 @@ services:
       retries: 10
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    network_mode: "host"
     image: iotabot
     restart: always
 
