@@ -15,9 +15,15 @@ initial_extensions = ['cogs.osu.extensions',
                       'cogs.command_error_handle',
                       'cogs.http_server']
 
+host = None
+if os.name == 'nt':
+    host = None
+else:
+    host = "host.docker.internal"
+
 
 def load_database():
-    aconn = psycopg2.connect(dbname=os.getenv("db"), user=os.getenv("login"),
+    aconn = psycopg2.connect(host=host, dbname=os.getenv("db"), user=os.getenv("login"),
                              password=os.getenv("passw"), async_=True)
     wait_select(aconn)
     return aconn.cursor()
