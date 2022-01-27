@@ -132,6 +132,7 @@ class LatestScore(commands.Cog):
         username, user_id, pp_rank = user_stuff
         recent_score = await self.get_score(user_id, limit)
         if recent_score:
+            recent_score.enabled_mods = recent_score.enabled_mods.shortname
             beatmapset = await self.get_beatmaps(recent_score.beatmap_id)
             ls = await self.format_map_percatange_done(beatmapset, recent_score)
             await self.bot.get_cog("EmbedMessage").prepare_message\

@@ -29,5 +29,6 @@ class SubmittedScore:
     async def get_recent_score(self, user_id, channel_id):
         score = await self.osu_api.get_user_recent(user_id, limit=0)
         if score and await self.is_valid_new_score(score, user_id, channel_id):
+            score.enabled_mods = score.enabled_mods.shortname
             return {"score": score, "beatmap": await self.osu_api.get_beatmaps(score.beatmap_id)}
 

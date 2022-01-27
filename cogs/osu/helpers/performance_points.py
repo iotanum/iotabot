@@ -46,7 +46,7 @@ class PP:
     # needed for the pyttanko pp calc for accurate pepes
     async def possible_score_values(self, accuracy, beatmap, misses):
         hit_objects = beatmap.count_slider + beatmap.count_normal + beatmap.count_spinner
-        n300, n100, n50 = await pyttanko.acc_round(accuracy, hit_objects, misses)
+        n300, n100, n50 = pyttanko.acc_round(accuracy, hit_objects, misses)
         return n300, n100, n50
 
     async def beatmap_file(self, beatmap_id):
@@ -64,18 +64,18 @@ class PP:
         return str(get_user_recent.enabled_mods), int(get_user_recent.maxcombo), int(get_user_recent.countmiss)
 
     async def submitted_play_star_calc(self, bmap, mods):
-        return await pyttanko.diff_calc().calc(bmap, mods)
+        return pyttanko.diff_calc().calc(bmap, mods)
 
     async def submitted_play_mods(self, mods):
-        return await pyttanko.mods_from_str(str(mods))
+        return pyttanko.mods_from_str(str(mods))
 
     async def calculate_pp(self, stars, bmap, mods, n50, n100, n300, combo, misses):
-        calc = await pyttanko.ppv2(stars['aim'], stars['speed'], max_combo=bmap.max_combo,
-                                   nsliders=bmap.count_slider, ncircles=bmap.count_normal,
-                                   nobjects=(bmap.count_slider + bmap.count_normal + bmap.count_spinner),
-                                   base_ar=bmap.diff_approach, base_od=bmap.diff_overall,
-                                   mods=mods, n50=n50,
-                                   n100=n100, n300=n300, combo=combo, nmiss=misses)
+        calc = pyttanko.ppv2(stars['aim'], stars['speed'], max_combo=bmap.max_combo,
+                             nsliders=bmap.count_slider, ncircles=bmap.count_normal,
+                             nobjects=(bmap.count_slider + bmap.count_normal + bmap.count_spinner),
+                             base_ar=bmap.diff_approach, base_od=bmap.diff_overall,
+                             mods=mods, n50=n50,
+                             n100=n100, n300=n300, combo=combo, nmiss=misses)
         pp = round(calc[0], 2)
         return pp
 
@@ -83,7 +83,7 @@ class PP:
     async def beatmap_difficulity_with_mods(self, mods, beatmap_default):
         mods_from_str = await self.submitted_play_mods(mods)
         ar, od, hp, cs = beatmap_default
-        return await pyttanko.mods_apply(mods_from_str, ar=ar, od=od, cs=cs, hp=hp)
+        return pyttanko.mods_apply(mods_from_str, ar=ar, od=od, cs=cs, hp=hp)
 
     async def calculator(self, get_user_recent, beatmap):
         mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
