@@ -5,7 +5,7 @@ WORKDIR /iotabot
 COPY . .
 
 RUN apt-get update \
-    && apt-get install postgresql-devel
+    && apt-get install libpq-dev
 
 RUN pip install --upgrade pip
 
