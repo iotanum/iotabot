@@ -15,7 +15,6 @@ services:
       interval: 10s
       timeout: 3s
       retries: 10
-      start-period: 110
     volumes:
       - '/run/postgresql:/run/postgresql'
     image: iotabot
