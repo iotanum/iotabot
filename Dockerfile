@@ -4,7 +4,10 @@ WORKDIR /iotabot
 
 COPY . .
 
-RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev linux-headers libxml2-dev libxslt-dev curl
+RUN apt-get update \
+    && apt-get install postgresql-dev gcc \
+       python3-dev musl-dev linux-headers \
+       libxml2-dev libxslt-dev curl
 
 RUN pip install --upgrade pip
 
