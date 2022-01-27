@@ -4,7 +4,8 @@ WORKDIR /iotabot
 
 COPY . .
 
-RUN apt-get update
+RUN apt-get update \
+    && apt-get install postgresql-devel
 
 RUN pip install --upgrade pip
 
