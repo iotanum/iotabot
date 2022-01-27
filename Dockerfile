@@ -5,8 +5,8 @@ WORKDIR /iotabot
 COPY . .
 
 RUN apt-get update \
-    && apt-get install postgresql-dev gcc \
-       python3-dev musl-dev linux-headers \
+    && apt-get install gcc \
+       musl-dev linux-headers \
        libxml2-dev libxslt-dev curl
 
 RUN pip install --upgrade pip
