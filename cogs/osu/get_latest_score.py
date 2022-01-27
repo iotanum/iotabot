@@ -39,6 +39,10 @@ class LatestScore(commands.Cog):
         return recent_score.count300 + recent_score.count100 + recent_score.count50 \
                + recent_score.countmiss
 
+    # api version of hitobjects
+    async def count_beatmap_objects(self, api_beatmap):
+        return api_beatmap.count_normal + api_beatmap.count_slider + api_beatmap.count_spinner
+
     async def beatmap_objects(self, beatmap):
         bmap = await self.beatmap_calculator.parse_beatmap_file(beatmap.beatmap_id)
         return len(bmap.hitobjects)
@@ -46,7 +50,7 @@ class LatestScore(commands.Cog):
     async def calculate_map_percentage_done(self, beatmap, recent_score):
         try:
             return (round((await self.count_recent_objects(recent_score)
-                           / beatmap.max_combo) * 100, 2)) \
+                           / await self.count_beatmap_objects(beatmap)) * 100, 2)) \
                 if str(recent_score.rank) == "F" else 100
         except ZeroDivisionError:
             return 0
