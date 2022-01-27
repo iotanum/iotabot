@@ -6,7 +6,7 @@ COPY . .
 
 RUN apt-get update \
     && apt-get install -y \
-       libpq-dev libxml2-dev libxslt-dev curl
+       libpq-dev libxml2-dev libxslt-dev curl gcc
 
 RUN pip install --upgrade pip
 
