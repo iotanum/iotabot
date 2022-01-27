@@ -4,10 +4,7 @@ WORKDIR /iotabot
 
 COPY . .
 
-RUN apt-get update \
-    && apt-get install gcc \
-       python3-dev musl-dev \
-       libxml2-dev libxslt-dev curl
+RUN apt-get update
 
 RUN pip install --upgrade pip
 
