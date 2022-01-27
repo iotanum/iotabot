@@ -6,7 +6,7 @@ COPY . .
 
 RUN apt-get update \
     && apt-get install gcc \
-       musl-dev linux-headers \
+       python3-dev musl-dev \
        libxml2-dev libxslt-dev curl
 
 RUN pip install --upgrade pip
