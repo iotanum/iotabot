@@ -5,7 +5,7 @@ WORKDIR /iotabot
 COPY . .
 
 RUN apt-get update \
-    && apt-get install libpq-dev
+    && apt-get install -y libpq-dev
 
 RUN pip install --upgrade pip
 
