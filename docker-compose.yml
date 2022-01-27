@@ -10,12 +10,12 @@ services:
       "autoheal": "true"
     ports:
       - 8090:8090
-      - 5432:5432
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8090/status"]
       interval: 10s
       timeout: 3s
       retries: 10
+      start-period: 110
     volumes:
       - '/run/postgresql:/run/postgresql'
     image: iotabot
@@ -30,3 +30,4 @@ services:
     environment:
       - AUTOHEAL_INTERVAL=10
       - CURL_TIMEOUT=30
+      - AUTOHEAL_START_PERIOD=120
