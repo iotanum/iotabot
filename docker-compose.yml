@@ -22,6 +22,7 @@ services:
     restart: always
 
   autoheal:
+    restart: always
     privileged: true
     image: willfarrell/autoheal
     container_name: autoheal
