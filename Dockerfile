@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM FROM python:3.9.10-bullseye
 
 WORKDIR /iotabot
 
