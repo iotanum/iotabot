@@ -9,8 +9,8 @@ services:
     labels:
       "autoheal": "true"
     ports:
-      - 8090:8090
-      - 80:80
+      - "8090:8090"
+      - "80:80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8090/status"]
       interval: 60s
@@ -19,6 +19,15 @@ services:
     volumes:
       - '/run/postgresql:/run/postgresql'
     image: iotabot
+    restart: always
+
+  osu_tools:
+    build:
+      context: .
+      dockerfile: osu_tools/Dockerfile
+    ports:
+      - "8091:8080"
+    image: osu_tools_wrapper
     restart: always
 
   autoheal:
