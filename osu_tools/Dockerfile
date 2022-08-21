@@ -20,9 +20,9 @@ RUN apt-get -y update && apt-get install -y wget curl build-essential
 
 # Install dotnet
 RUN wget https://download.visualstudio.microsoft.com/download/pr/5a24144e-0d7d-4cc9-b9d8-b4d32d6bb084/e882181e475e3c66f48a22fbfc7b19c0/dotnet-sdk-6.0.400-linux-arm.tar.gz
-RUN mkdir -p $HOME/dotnet && tar zxf dotnet-sdk-6.0.400-linux-musl-arm.tar.gz -C $HOME/dotnet
-RUN echo "DOTNET_ROOT=$HOME/dotnet" >> ~/.bashrc
-RUN echo "PATH=$PATH:$HOME/dotnet" >> ~/.bashrc
+RUN mkdir -p $HOME/dotnet && tar zxf dotnet-sdk-6.0.400-linux-arm.tar.gz -C $HOME/dotnet
+RUN export DOTNET_ROOT=$HOME/dotnet
+RUN export PATH=$PATH:$HOME/dotnet
 
 # Install python
 RUN apt-get install -y software-properties-common
