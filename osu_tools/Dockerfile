@@ -22,7 +22,7 @@ RUN apt-get -y update && apt-get install -y wget
 RUN wget https://download.visualstudio.microsoft.com/download/pr/0c66ddb7-c3c3-4814-9092-fcc2816cc7f6/2a7988ffe2cca87fc011778bf1d1c684/dotnet-sdk-6.0.400-linux-musl-arm.tar.gz
 RUN mkdir -p $HOME/dotnet && tar zxf dotnet-sdk-6.0.400-linux-musl-arm.tar.gz -C $HOME/dotnet
 RUN echo "DOTNET_ROOT=$HOME/dotnet" >> ~/.bashrc
-RUN echo "PATH=$PATH:$HOME/dotnet" >> ~/.bash_profile
+RUN echo "PATH=$PATH:$HOME/dotnet" >> ~/.bashrc
 
 # Install python
 RUN apt-get install -y software-properties-common
