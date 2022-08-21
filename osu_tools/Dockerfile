@@ -15,6 +15,7 @@ RUN git clone --depth 1 https://github.com/ppy/osu.git
 
 FROM ubuntu:22.04 as final
 ENV DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
 
 RUN apt-get -y update && apt-get install -y wget curl build-essential
 
