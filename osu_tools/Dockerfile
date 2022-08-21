@@ -9,16 +9,25 @@ RUN git clone --depth 1 https://github.com/ppy/osu.git
 
 # Hacky tiem
 # Pull only the ruleset dirs from main osu repo and branch
-# TODO it's not working atm? Broken master
+# TODO fix this, a lot of prereq
 #COPY set_and_pull_rulesets.sh .
 #RUN ./set_and_pull_rulesets.sh
 
-FROM bitnami/dotnet-sdk:6 as final
+FROM ubuntu:22.04 as final
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get -y update
+
+# Install dotnet
+RUN wget https://download.visualstudio.microsoft.com/download/pr/0c66ddb7-c3c3-4814-9092-fcc2816cc7f6/2a7988ffe2cca87fc011778bf1d1c684/dotnet-sdk-6.0.400-linux-musl-arm.tar.gz
+RUN mkdir -p $HOME/dotnet && tar zxf dotnet-sdk-6.0.400-linux-musl-arm.tar.gz -C $HOME/dotnet
+RUN export DOTNET_ROOT=$HOME/dotnet
+RUN export PATH=$PATH:$HOME/dotnet
 
 # Install python
-RUN apt-get -y update && apt-get install -y software-properties-common
+RUN apt-get install -y software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get install -y python3.9 python3.9-dev python3.9-venv
+RUN apt-get install -y python3.9 dotnet6
 
 WORKDIR /app
 RUN mkdir osu-tools
@@ -26,11 +35,10 @@ RUN mkdir osu
 RUN mkdir wrapper
 
 COPY --from=base /app/osu-tools /app/osu-tools
-# TODO
 COPY --from=base /app/osu /app/osu
 COPY wrapper /app/wrapper
 
-# TODO not working rn, broken master
+# TODO fix pre-req csprojs, currently cloning whole repo
 # Update pp-calc with latest difficulty rulesets (got from *rulesets.sh)
 WORKDIR /app/osu-tools
 RUN ./UseLocalOsu.sh
