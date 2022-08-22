@@ -24,6 +24,7 @@ RUN wget https://download.visualstudio.microsoft.com/download/pr/5a24144e-0d7d-4
 RUN mkdir -p $HOME/dotnet && tar zxf dotnet-sdk-6.0.400-linux-arm.tar.gz -C $HOME/dotnet
 ENV DOTNET_ROOT="$HOME/dotnet"
 ENV PATH="$PATH:$HOME/dotnet"
+RUN echo "export PATH=$PATH:$HOME/dotnet" >> ~/.bashrc
 
 # Install python
 RUN apt-get install -y software-properties-common
