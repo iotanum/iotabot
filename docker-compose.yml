@@ -21,14 +21,14 @@ services:
     image: iotabot
     restart: always
 
-  osu_tools:
-    build:
-      context: .
-      dockerfile: osu_tools/Dockerfile
-    ports:
-      - "8091:8080"
-    image: osu_tools_wrapper
-    restart: always
+#  osu_tools:
+#    build:
+#      context: .
+#      dockerfile: osu_tools/Dockerfile
+#    ports:
+#      - "8091:8080"
+#    image: osu_tools_wrapper
+#    restart: always
 
   autoheal:
     restart: always
