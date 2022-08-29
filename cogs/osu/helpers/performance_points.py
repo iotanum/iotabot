@@ -94,6 +94,8 @@ class PP:
         json_payload = await self.format_payload(beatmap, mods, score)
         calcd_score = await self.send_request(json_payload)
         self.accuracy = round(calcd_score['accuracy'], 2)
+        print(json_payload, "i xexxar")
+        print(calcd_score, "is xexxar")
 
         # bmap = await self.parse_beatmap_file(get_user_recent.beatmap_id)
         # stars = await self.submitted_play_star_calc(bmap, mods)
