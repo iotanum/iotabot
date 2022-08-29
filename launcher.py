@@ -5,9 +5,13 @@ from dotenv import load_dotenv
 
 import os
 import asyncio
+import discord
 
 load_dotenv("vars.env")
-bot = commands.Bot(command_prefix=os.getenv("command_prefix"))
+
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix=os.getenv("command_prefix"), intents=intents)
 initial_extensions = ['cogs.osu.extensions',
                       'cogs.fun.extensions',
                       'cogs.gw.commands',
