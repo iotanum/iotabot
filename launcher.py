@@ -39,8 +39,8 @@ async def load_extensions():
 
 
 if __name__ == '__main__':
-    asyncio.run(load_extensions())
     bot.db = load_database()
+    asyncio.run(load_extensions())
     bot.run(os.getenv("discord_token"), reconnect=True)
 
 
