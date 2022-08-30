@@ -94,6 +94,3 @@ class HTTPServer(commands.Cog):
 async def setup(bot):
     server = HTTPServer(bot)
     await bot.add_cog(server)
-
-    async with bot:
-        bot.loop.create_task(server.http_server())

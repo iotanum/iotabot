@@ -38,10 +38,15 @@ async def load_extensions():
             print(f'Failed to load extension "{extension}"')
 
 
+async def main():
+    async with bot:
+        bot.db = load_database()
+        await load_extensions()
+        bot.loop.create_task(bot.get_cog("HTTPServer").http_server())
+        await bot.start(os.getenv("discord_token"), reconnect=True)
+
 if __name__ == '__main__':
-    bot.db = load_database()
-    asyncio.run(load_extensions())
-    bot.run(os.getenv("discord_token"), reconnect=True)
+    asyncio.run(main())
 
 
 @commands.is_owner()
