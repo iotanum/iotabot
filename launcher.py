@@ -19,6 +19,7 @@ initial_extensions = ['cogs.osu.extensions',
                       'cogs.command_error_handle',
                       'cogs.http_server']
 
+
 def load_database():
     aconn = psycopg2.connect(dbname=os.getenv("db"), user=os.getenv("login"),
                              password=os.getenv("passw"), async_=True)
@@ -30,14 +31,14 @@ if __name__ == '__main__':
     for extension in initial_extensions:
         try:
             print(f"loading {extension}")
-            bot.load_extension(extension)
+            await bot.load_extension(extension)
 
         except Exception as e:
             print(e)
             print(f'Failed to load extension "{extension}"')
 
     bot.db = load_database()
-    bot.run(os.getenv("discord_token"), bot=True, reconnect=True)
+    bot.run(os.getenv("discord_token"), reconnect=True)
 
 
 @commands.is_owner()
