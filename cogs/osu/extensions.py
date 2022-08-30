@@ -4,7 +4,6 @@ from discord.ext import commands
 class OsuExtensions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.add_osu_cogs()
 
     async def add_osu_cogs(self):
         extensions = ['cogs.osu.embed',
@@ -22,4 +21,6 @@ class OsuExtensions(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(OsuExtensions(bot))
+    osu_extensions = OsuExtensions(bot)
+    await osu_extensions.add_osu_cogs()
+    await bot.add_cog(osu_extensions)

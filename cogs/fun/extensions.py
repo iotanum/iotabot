@@ -4,7 +4,6 @@ from discord.ext import commands
 class FunExtensions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.add_fun_cogs()
 
     async def add_fun_cogs(self):
         extensions = ['cogs.fun.random',
@@ -21,4 +20,6 @@ class FunExtensions(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(FunExtensions(bot))
+    fun_extensions = FunExtensions(bot)
+    await fun_extensions.add_fun_cogs()
+    await bot.add_cog(fun_extensions)
