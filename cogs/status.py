@@ -93,5 +93,5 @@ class Status(commands.Cog):
         self.tracking_start_time = datetime.utcnow()
 
 
-def setup(bot):
-    bot.add_cog(Status(bot))
+async def setup(bot):
+    await bot.add_cog(Status(bot))

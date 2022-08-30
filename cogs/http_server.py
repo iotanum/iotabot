@@ -91,7 +91,7 @@ class HTTPServer(commands.Cog):
         print(f"HTTP server running on: {'0.0.0.0' if not site._host else site._host}:{site._port} ")
 
 
-def setup(bot):
+async def setup(bot):
     server = HTTPServer(bot)
-    bot.add_cog(server)
+    await bot.add_cog(server)
     bot.loop.create_task(server.http_server())
