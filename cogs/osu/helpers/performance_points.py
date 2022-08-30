@@ -96,6 +96,9 @@ class PP:
         self.accuracy = round(calcd_score['accuracy'], 2)
         print(json_payload, "i xexxar")
         print(calcd_score, "is xexxar")
+        print(get_user_recent.count100, "count100 is osuapi lib")
+        print(score, "mano sukonstruotas score for xexxar")
+
 
         # bmap = await self.parse_beatmap_file(get_user_recent.beatmap_id)
         # stars = await self.submitted_play_star_calc(bmap, mods)
