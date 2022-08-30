@@ -16,7 +16,7 @@ class PP:
         map_id = {"map_id": beatmap.beatmap_id}
         mods = [mods[i:i+2] for i in range(0, len(mods), 2)]
         mods = {"mods": mods}
-        combo_stuff = {"good": score['100'], 'meh': score['50']}
+        combo_stuff = {"good": score['100'], 'meh': score['50'], 'ok': score['100']}
         misses = {"miss": score['miss']}
         combo = {"combo": score['combo']}
         rework = {"rework": "live"}
