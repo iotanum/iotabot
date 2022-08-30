@@ -20,7 +20,7 @@ RUN apt-get -y update && apt-get install -y wget curl build-essential
 
 # Install dotnet
 RUN wget https://download.visualstudio.microsoft.com/download/pr/901f7928-5479-4d32-a9e5-ba66162ca0e4/d00b935ec4dc79a27f5bde00712ed3d7/dotnet-sdk-6.0.400-linux-arm64.tar.gz
-RUN mkdir -p /usr/bin/dotnet && tar zxf dotnet-sdk-6.0.400-linux-arm.tar.gz -C /usr/bin/dotnet
+RUN mkdir -p /usr/bin/dotnet && tar zxf dotnet-sdk-6.0.400-linux-arm64.tar.gz -C /usr/bin/dotnet
 ENV DOTNET_ROOT="/usr/bin/dotnet"
 ENV PATH="$PATH:/usr/bin/dotnet"
 RUN echo "export PATH=$PATH:/usr/bin/dotnet" >> ~/.bashrc
