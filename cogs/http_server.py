@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord
-
+import asyncio
 import aiohttp
 from aiohttp import web
 
@@ -92,6 +92,7 @@ class HTTPServer(commands.Cog):
 
 
 async def setup(bot):
-    server = HTTPServer(bot)
-    await bot.add_cog(server)
-    bot.loop.create_task(server.http_server())
+    async with bot:
+        server = HTTPServer(bot)
+        await bot.add_cog(server)
+        bot.loop.create_task(server.http_server())
