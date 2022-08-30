@@ -27,7 +27,7 @@ def load_database():
     return aconn.cursor()
 
 
-if __name__ == '__main__':
+async def load_extensions():
     for extension in initial_extensions:
         try:
             print(f"loading {extension}")
@@ -37,6 +37,9 @@ if __name__ == '__main__':
             print(e)
             print(f'Failed to load extension "{extension}"')
 
+
+if __name__ == '__main__':
+    asyncio.run(load_extensions())
     bot.db = load_database()
     bot.run(os.getenv("discord_token"), reconnect=True)
 
