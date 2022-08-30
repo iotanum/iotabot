@@ -49,5 +49,5 @@ class OnMsg(commands.Cog):
             await self.bot.get_channel(message.channel.id).send('\U0000261d timestamp btw')
 
 
-def setup(bot):
-    bot.add_cog(OnMsg(bot))
+async def setup(bot):
+    await bot.add_cog(OnMsg(bot))

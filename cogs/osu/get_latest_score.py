@@ -145,5 +145,5 @@ class LatestScore(commands.Cog):
             await ctx.send(f"{username} has no latest scores.")
 
 
-def setup(bot):
-    bot.add_cog(LatestScore(bot))
+async def setup(bot):
+    await bot.add_cog(LatestScore(bot))

@@ -100,5 +100,5 @@ class TrackingCommands(commands.Cog):
             await ctx.send(f"{username} has no recent scores.")
 
 
-def setup(bot):
-    bot.add_cog(TrackingCommands(bot))
+async def setup(bot):
+    await bot.add_cog(TrackingCommands(bot))

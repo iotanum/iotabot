@@ -112,5 +112,5 @@ class EmbedMessage(commands.Cog):
         await self.reset_values()
 
 
-def setup(bot):
-    bot.add_cog(EmbedMessage(bot))
+async def setup(bot):
+    await bot.add_cog(EmbedMessage(bot))

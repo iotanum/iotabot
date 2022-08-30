@@ -62,5 +62,5 @@ class Debugging(commands.Cog):
             await ctx.message.author.send(f"{ip}")
 
 
-def setup(bot):
-    bot.add_cog(Debugging(bot))
+async def setup(bot):
+    await bot.add_cog(Debugging(bot))
