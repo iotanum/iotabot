@@ -13,7 +13,7 @@ class PP:
         self.possible_pp = []
 
     async def format_payload(self, beatmap, mods, score):
-        map_id = {"map_id": beatmap.beatmap_id}
+        map_id = {"map_id": beatmap.beatmap_id, "beatmap_id": beatmap.beatmap_id}
         mods = [mods[i:i+2] for i in range(0, len(mods), 2)]
         mods = {"mods": mods}
         combo_stuff = {"good": score['100'], 'meh': score['50'], 'ok': score['100']}

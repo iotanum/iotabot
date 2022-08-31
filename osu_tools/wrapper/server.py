@@ -27,9 +27,9 @@ async def calculate(request):
                            accuracy=body.get('accuracy'),
                            combo=body.get('combo'),
                            mods=body.get('mods'),
-                           goods=body.get('goods'),
-                           mehs=body.get('mehs'),
-                           misses=body.get('misses'),
+                           goods=body.get('good'),
+                           mehs=body.get('meh'),
+                           misses=body.get('miss'),
                            )
 
     return web.json_response(data=score)
