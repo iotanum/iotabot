@@ -20,7 +20,7 @@ async def calculate(request):
             return web.json_response(data=data, status=400)
 
     for k, v in body.items():
-        body[k] = v.strip()
+        body[k] = str(v).strip()
 
     score = simulate_score(
                            body['beatmap_id'],
