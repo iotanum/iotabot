@@ -27,7 +27,7 @@ class PP:
     async def send_request(self, payload):
         connector = aiohttp.TCPConnector(verify_ssl=False)
         headers = {"Content-Type": "application/json"}
-        async with aiohttp.request('POST', f"http://pp/calculate",
+        async with aiohttp.request('POST', f"http://pp:8080/calculate",
                                    data=payload, connector=connector,
                                    headers=headers) as response:
             data = await response.json()
