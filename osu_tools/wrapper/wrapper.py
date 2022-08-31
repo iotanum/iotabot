@@ -24,14 +24,20 @@ def fix_mods(mods: str) -> List:
     return fixed_mods
 
 
-def simulate_score(beatmap_id: str, accuracy: str, combo: str,
-                   mods: str = None, goods: str = None, mehs: str = None, misses: str = None):
+def simulate_score(beatmap_id: str, accuracy: str = None, combo: str = None, mods: str = None, goods: str = None,
+                   mehs: str = None, misses: str = None):
     command = OSU_SIMULATE_CMD.copy()
 
     command.append(beatmap_id)
-    command.append(f"--accuracy {accuracy}")
-    command = command + fix_mods(mods)
-    command.append(f"--combo {combo}")
+
+    if mods:
+        command = command + fix_mods(mods)
+
+    if accuracy:
+        command.append(f"--accuracy {accuracy}")
+
+    if combo:
+        command.append(f"--combo {combo}")
 
     if goods:
         command.append(f"--goods {goods}")

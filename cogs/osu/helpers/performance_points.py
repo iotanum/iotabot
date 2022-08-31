@@ -27,7 +27,7 @@ class PP:
     async def send_request(self, payload):
         connector = aiohttp.TCPConnector(verify_ssl=False)
         headers = {"Content-Type": "application/json"}
-        async with aiohttp.request('PATCH', f"https://pp-api.huismetbenen.nl/calculate-score",
+        async with aiohttp.request('POST', f"http://pp/calculate",
                                    data=payload, connector=connector,
                                    headers=headers) as response:
             data = await response.json()
@@ -69,16 +69,6 @@ class PP:
     async def submitted_play_mods(self, mods):
         return pyttanko.mods_from_str(str(mods))
 
-    async def calculate_pp(self, stars, bmap, mods, n50, n100, n300, combo, misses):
-        calc = pyttanko.ppv2(stars['aim'], stars['speed'], max_combo=bmap.max_combo,
-                             nsliders=bmap.count_slider, ncircles=bmap.count_normal,
-                             nobjects=(bmap.count_slider + bmap.count_normal + bmap.count_spinner),
-                             base_ar=bmap.diff_approach, base_od=bmap.diff_overall,
-                             mods=mods, n50=n50,
-                             n100=n100, n300=n300, combo=combo, nmiss=misses)
-        pp = round(calc[0], 2)
-        return pp
-
     # returns speed_multiplier, ar, od, cs, hp
     async def beatmap_difficulity_with_mods(self, mods, beatmap_default):
         mods_from_str = await self.submitted_play_mods(mods)
@@ -87,30 +77,15 @@ class PP:
 
     async def calculator(self, get_user_recent, beatmap):
         mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
-        # self.accuracy = await self.submitted_accuracy_calc(get_user_recent)
-        # mods = await self.submitted_play_mods(mods)
+
         score = {"mods": mods, "combo": combo, "miss": misses, "300": get_user_recent.count300,
                  "100": get_user_recent.count100, "50": get_user_recent.count50}
         json_payload = await self.format_payload(beatmap, mods, score)
         calcd_score = await self.send_request(json_payload)
         self.accuracy = round(calcd_score['accuracy'], 2)
-        print(json_payload, "i xexxar")
-        print(calcd_score, "is xexxar")
-        print(get_user_recent.count100, "count100 is osuapi lib")
-        print(score, "mano sukonstruotas score for xexxar")
-
-
-        # bmap = await self.parse_beatmap_file(get_user_recent.beatmap_id)
-        # stars = await self.submitted_play_star_calc(bmap, mods)
-        # self.star_rating = round(stars_total, 2)
-        # n300, n100, n50 = await self.possible_score_values(self.accuracy, beatmap, misses)
 
         self.pp = round(calcd_score['local_pp'], 2)
         self.star_rating = round(calcd_score['newSR'], 2)
-
-        # stars_pyy = {"aim": calcd_score['aim_pp'], "speed": calcd_score['tap_pp']}
-        # mods_pyy = await self.submitted_play_mods(mods)
-        # self.pp = await self.calculate_pp(stars, beatmap, mods, n50, n100, n300, combo, misses)
 
         self.acc_if_no_misses = await self.submitted_accuracy_calc(get_user_recent, if_miss=True)
         await self.possible_pp_calculator(self.acc_if_no_misses, beatmap, mods, score)

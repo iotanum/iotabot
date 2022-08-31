@@ -7,7 +7,7 @@ routes = web.RouteTableDef()
 
 @routes.post('/calculate')
 async def calculate(request):
-    needed_args = ["beatmap_id", "accuracy", "combo"]
+    needed_args = ["beatmap_id"]
 
     try:
         body = json.loads(await request.text())
@@ -24,8 +24,8 @@ async def calculate(request):
 
     score = simulate_score(
                            body['beatmap_id'],
-                           body['accuracy'],
-                           body['combo'],
+                           accuracy=body.get('accuracy'),
+                           combo=body.get('combo'),
                            mods=body.get('mods'),
                            goods=body.get('goods'),
                            mehs=body.get('mehs'),

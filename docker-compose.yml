@@ -21,7 +21,7 @@ services:
     container_name: iotabot
     restart: always
 
-  osu_tools:
+  pp:
     build:
       context: ./osu_tools
       dockerfile: Dockerfile
