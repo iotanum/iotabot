@@ -23,8 +23,8 @@ services:
 
   osu_tools:
     build:
-      context: .
-      dockerfile: osu_tools/Dockerfile
+      context: ./osu_tools
+      dockerfile: Dockerfile
     ports:
       - "8091:8080"
     labels:
