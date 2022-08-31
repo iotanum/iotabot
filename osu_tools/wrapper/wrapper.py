@@ -6,7 +6,10 @@ import os
 import json
 
 PP_CALC_DIR = "/app/osu-tools/PerformanceCalculator"
-OSU_SIMULATE_CMD = ["dotnet", "run", "--", "simulate", "osu"]
+DOTNET_VER = "net6.0"
+DOTNET_PUBLISH_RUNTIME = "linux-arm64"
+PUBLISHED_CALC = f"bin/Debug/{DOTNET_VER}/{DOTNET_PUBLISH_RUNTIME}/publish/PerformanceCalculator"
+OSU_SIMULATE_CMD = [PUBLISHED_CALC, "simulate", "osu"]
 
 
 def fix_mods(mods: str) -> List:

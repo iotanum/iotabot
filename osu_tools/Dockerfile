@@ -47,6 +47,7 @@ RUN ./UseLocalOsu.sh
 # Preload nuget libs and stuffs
 WORKDIR /app/osu-tools/PerformanceCalculator
 RUN dotnet run -- --help
+RUN dotnet publish -r linux-arm64 --self-contained -p:PublishReadyToRun=true
 
 WORKDIR /app/wrapper
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
