@@ -18,17 +18,19 @@ services:
       retries: 10
     volumes:
       - '/run/postgresql:/run/postgresql'
-    image: iotabot
+    container_name: iotabot
     restart: always
 
-#  osu_tools:
-#    build:
-#      context: .
-#      dockerfile: osu_tools/Dockerfile
-#    ports:
-#      - "8091:8080"
-#    image: osu_tools_wrapper
-#    restart: always
+  osu_tools:
+    build:
+      context: .
+      dockerfile: osu_tools/Dockerfile
+    ports:
+      - "8091:8080"
+    labels:
+      "autoheal": "true"
+    container_name: osu_tools_wrapper
+    restart: always
 
   autoheal:
     restart: always
