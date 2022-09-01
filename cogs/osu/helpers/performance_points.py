@@ -95,8 +95,11 @@ class PP:
     async def calculator(self, get_user_recent, beatmap):
         mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
 
-        score = {"mods": mods, "combo": combo, "miss": misses, "300": get_user_recent.count300,
+        score = {"combo": combo, "miss": misses, "300": get_user_recent.count300,
                  "100": get_user_recent.count100, "50": get_user_recent.count50}
+        if mods:
+            score = score | {'mods': mods}
+
         json_payload = await self.format_payload(beatmap, score)
         calcd_score = await self.send_request(json_payload)
 
@@ -109,6 +112,8 @@ class PP:
 
     async def possible_pp_calculator(self, accuracy, bmap, mods, score):
         # This is all shit, need a rework
+        # note to myself: can make this work with just passing accuracy
+        # without any combo numbers/100s/etc
         self.possible_pp = []
         for acc in accuracy, 100, 95, 90:
             if acc == accuracy:
