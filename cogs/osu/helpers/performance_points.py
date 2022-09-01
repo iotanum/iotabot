@@ -97,7 +97,7 @@ class PP:
 
         score = {"combo": combo, "miss": misses, "300": get_user_recent.count300,
                  "100": get_user_recent.count100, "50": get_user_recent.count50}
-        if mods or mods != "NF":
+        if mods:
             score = score | {'mods': mods}
 
         print(score, "sukonstruotas score in calculator func")
