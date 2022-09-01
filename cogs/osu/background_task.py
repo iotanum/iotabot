@@ -65,7 +65,6 @@ class Task(commands.Cog):
 
                 submitted_play = await self.submitted_score.get_recent_score(player_information['user_id'],
                                                                              player_information['channels'])
-                print(submitted_play, "submitted_paly in background_task")
                 if submitted_play:
                     submitted_play_info = await self.format_player_info(player, submitted_play)
                     await self.log_submitted_scores_to_terminal(player_information)

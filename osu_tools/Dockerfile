@@ -56,4 +56,4 @@ RUN pip install -r req
 
 EXPOSE 8080
 
-CMD ["python3.9", "server.py"]
+CMD ["python3.9", "-u", "server.py"]
