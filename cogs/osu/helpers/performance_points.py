@@ -12,16 +12,21 @@ class PP:
         self.acc_if_no_misses = ""
         self.possible_pp = []
 
-    async def format_payload(self, beatmap, mods, score):
-        map_id = {"map_id": beatmap.beatmap_id, "beatmap_id": beatmap.beatmap_id}
-        mods = [mods[i:i+2] for i in range(0, len(mods), 2)]
-        mods = {"mods": mods}
-        combo_stuff = {"good": score['100'], 'meh': score['50'], 'ok': score['100']}
-        misses = {"miss": score['miss']}
-        combo = {"combo": score['combo']}
-        rework = {"rework": "live"}
+    async def format_payload(self, beatmap, score):
+        payload = dict()
 
-        payload = {**map_id, **mods, **combo_stuff, **misses, **combo, **rework}
+        payload = payload | {"map_id": beatmap.beatmap_id, "beatmap_id": beatmap.beatmap_id}
+
+        if score.get('mods'):
+            mods = [score['mods'][i:i+2] for i in range(0, len(score['mods']), 2)]
+            mods = {"mods": mods}
+            payload = payload | mods
+
+        payload = payload | {"good": score['100'], 'meh': score['50'], 'ok': score['100']}
+        payload = payload | {"miss": score['miss']}
+        payload = payload | {"combo": score['combo']}
+        payload = payload | {"rework": "live"}
+
         return json.dumps(payload)
 
     async def send_request(self, payload):
@@ -75,22 +80,35 @@ class PP:
         ar, od, hp, cs = beatmap_default
         return pyttanko.mods_apply(mods_from_str, ar=ar, od=od, cs=cs, hp=hp)
 
-    async def calculator(self, get_user_recent, beatmap):
-        mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
-
-        score = {"mods": mods, "combo": combo, "miss": misses, "300": get_user_recent.count300,
-                 "100": get_user_recent.count100, "50": get_user_recent.count50}
-        json_payload = await self.format_payload(beatmap, mods, score)
-        calcd_score = await self.send_request(json_payload)
+    async def xexxar_calc_format(self, calcd_score):
         self.accuracy = round(calcd_score['accuracy'], 2)
 
         self.pp = round(calcd_score['local_pp'], 2)
         self.star_rating = round(calcd_score['newSR'], 2)
 
+    async def official_calc_format(self, calcd_score):
+        self.accuracy = round(calcd_score['score']['accuracy'], 2)
+
+        self.pp = round(calcd_score['performance_attributes']['pp'], 2)
+        self.star_rating = round(calcd_score['difficulty_attributes']['star_rating'], 2)
+
+    async def calculator(self, get_user_recent, beatmap):
+        mods, combo, misses = await self.submitted_play_stuff(get_user_recent)
+
+        score = {"mods": mods, "combo": combo, "miss": misses, "300": get_user_recent.count300,
+                 "100": get_user_recent.count100, "50": get_user_recent.count50}
+        json_payload = await self.format_payload(beatmap, score)
+        calcd_score = await self.send_request(json_payload)
+
+        # need to change self variables to a proper object return
+        # if I want to return to xexxar use xexxar_calc_format
+        await self.official_calc_format(calcd_score)
+
         self.acc_if_no_misses = await self.submitted_accuracy_calc(get_user_recent, if_miss=True)
         await self.possible_pp_calculator(self.acc_if_no_misses, beatmap, mods, score)
 
     async def possible_pp_calculator(self, accuracy, bmap, mods, score):
+        # This is all shit, need a rework
         self.possible_pp = []
         for acc in accuracy, 100, 95, 90:
             if acc == accuracy:
@@ -100,9 +118,9 @@ class PP:
                 score['miss'] = 0
                 score['combo'] = bmap.max_combo
                 print(score, "possible score")
-                json_payload = await self.format_payload(bmap, mods, score)
+                json_payload = await self.format_payload(bmap, score)
                 calcd_score = await self.send_request(json_payload)
-                pp = round(calcd_score['local_pp'], 2)
+                pp = round(calcd_score['performance_attributes']['pp'], 2)
             else:
                 pp = 0
 
