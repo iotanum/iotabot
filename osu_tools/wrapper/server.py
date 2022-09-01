@@ -24,6 +24,8 @@ async def calculate(request):
             continue
         body[k] = str(v).strip()
 
+    print(body, "calculating this")
+    print(body.get('mods'))
     score = simulate_score(
                            body['beatmap_id'],
                            accuracy=body.get('accuracy'),

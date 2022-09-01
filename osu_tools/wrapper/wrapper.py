@@ -12,19 +12,16 @@ PUBLISHED_CALC = f"bin/Debug/{DOTNET_VER}/{DOTNET_PUBLISH_RUNTIME}/publish/Perfo
 OSU_SIMULATE_CMD = [PUBLISHED_CALC, "simulate", "osu"]
 
 
-def fix_mods(mods: str) -> List:
+def fix_mods(mods: list) -> List:
     fixed_mods = list()
 
-    # delimit mods by 2 chara
-    n = 2
-    mods = [mods[i:i+n] for i in range(0, len(mods), n)]
     for mod in mods:
         fixed_mods.append(f"--mod {mod}")
 
     return fixed_mods
 
 
-def simulate_score(beatmap_id: str, accuracy: str = None, combo: str = None, mods: str = None, goods: str = None,
+def simulate_score(beatmap_id: str, accuracy: str = None, combo: str = None, mods: list = None, goods: str = None,
                    mehs: str = None, misses: str = None):
     command = OSU_SIMULATE_CMD.copy()
 
