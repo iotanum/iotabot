@@ -17,6 +17,9 @@ class PP:
 
         payload = payload | {"map_id": beatmap.beatmap_id, "beatmap_id": beatmap.beatmap_id}
 
+        if score.get('accuracy'):
+            payload = payload | {"accuracy": score['accuracy']}
+
         if score.get('mods'):
             mods = [score['mods'][i:i+2] for i in range(0, len(score['mods']), 2)]
             mods = {"mods": mods}
@@ -26,7 +29,7 @@ class PP:
             payload = payload | {"good": score['100'], 'ok': score['100']}
 
         if score.get('50'):
-            payload = payload | {"good": score['50']}
+            payload = payload | {"meh": score['50']}
 
         if score.get('miss'):
             payload = payload | {"miss": score['miss']}
