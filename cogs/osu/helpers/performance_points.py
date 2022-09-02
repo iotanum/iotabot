@@ -22,9 +22,18 @@ class PP:
             mods = {"mods": mods}
             payload = payload | mods
 
-        payload = payload | {"good": score['100'], 'meh': score['50'], 'ok': score['100']}
-        payload = payload | {"miss": score['miss']}
-        payload = payload | {"combo": score['combo']}
+        if score.get('100'):
+            payload = payload | {"good": score['100'], 'ok': score['100']}
+
+        if score.get('50'):
+            payload = payload | {"good": score['50']}
+
+        if score.get('miss'):
+            payload = payload | {"miss": score['miss']}
+
+        if score.get('combo'):
+            payload = payload | {"combo": score['combo']}
+
         payload = payload | {"rework": "live"}
 
         return json.dumps(payload)
