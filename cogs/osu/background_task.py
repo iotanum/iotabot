@@ -40,10 +40,10 @@ class Task(commands.Cog):
         try:
             await self.bot.get_user(creator_discord_id).send(f"```{traceback.format_exc()}```\n")
         except (discord.errors.HTTPException, AttributeError):
-            error = traceback.format_exc()
+            error = str(traceback.format_exc())
             print(error)
 
-            char_limit = 2000
+            char_limit = 1999
             messages = [error[i:i+char_limit] for i in range(0, len(error), char_limit)]
 
             for message in messages:
