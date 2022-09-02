@@ -37,17 +37,14 @@ class Task(commands.Cog):
 
     async def log_fatal_error_to_creator_dm(self):
         creator_discord_id = 450567441437687818
-        try:
-            await self.bot.get_user(creator_discord_id).send(f"```{traceback.format_exc()}```\n")
-        except (discord.errors.HTTPException, AttributeError):
-            error = str(traceback.format_exc())
-            print(error)
+        error = str(traceback.format_exc())
+        print(error)
 
-            char_limit = 1999
-            messages = [error[i:i+char_limit] for i in range(0, len(error), char_limit)]
+        char_limit = 1999
+        messages = [error[i:i+char_limit] for i in range(0, len(error), char_limit)]
 
-            for message in messages:
-                await self.bot.get_user(creator_discord_id).send(f"```{message}```\n")
+        for message in messages:
+            await self.bot.get_user(creator_discord_id).send(f"```{message}```\n")
 
     async def restart_tracking(self, ctx=None):
         self.background_task.restart()
