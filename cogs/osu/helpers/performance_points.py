@@ -127,8 +127,8 @@ class PP:
         # Just passing acc value to the calc
         for acc in accuracy, 100, 95, 90:
             score['accuracy'] = acc
-            del score['100']
-            del score['50']
+            del score['100'] if score.get('100') else None
+            del score['50'] if score.get('50') else None
             score['miss'] = 0
             score['combo'] = bmap.max_combo
             json_payload = await self.format_payload(bmap, score)
