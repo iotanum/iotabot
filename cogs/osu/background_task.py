@@ -40,14 +40,14 @@ class Task(commands.Cog):
         try:
             await self.bot.get_user(creator_discord_id).send(f"```{traceback.format_exc()}```\n")
         except (discord.errors.HTTPException, AttributeError):
-            traceback_error = traceback.format_exc().split('Traceback')
-            api_response = traceback_error[0][-1000:]
-            print(len(api_response), "error", 1)
-            print(len(traceback_error[0]), "error", 2)
-            print(len(traceback_error[1]), "error", 3)
-            api_response = traceback_error[1][-1000:] if api_response is "" else api_response
-            await self.bot.get_user(creator_discord_id).send(f"Probably osu!api is down.\n"
-                                                             f"```{api_response}```\n")
+            error = traceback.format_exc()
+            print(error)
+
+            char_limit = 2000
+            messages = [error[i:i+char_limit] for i in range(0, len(error), char_limit)]
+
+            for message in messages:
+                await self.bot.get_user(creator_discord_id).send(f"```{message}```\n")
 
     async def restart_tracking(self, ctx=None):
         self.background_task.restart()
