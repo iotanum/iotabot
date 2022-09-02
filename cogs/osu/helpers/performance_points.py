@@ -110,25 +110,19 @@ class PP:
         await self.official_calc_format(calcd_score)
 
         self.acc_if_no_misses = await self.submitted_accuracy_calc(get_user_recent, if_miss=True)
-        await self.possible_pp_calculator(self.acc_if_no_misses, beatmap, mods, score)
+        await self.possible_pp_calculator(self.acc_if_no_misses, beatmap, score)
 
-    async def possible_pp_calculator(self, accuracy, bmap, mods, score):
-        # This is all shit, need a rework
-        # note to myself: can make this work with just passing accuracy
-        # without any combo numbers/100s/etc
+    async def possible_pp_calculator(self, accuracy, bmap, score):
         self.possible_pp = []
-        for acc in accuracy, 100, 95, 90:
-            if acc == accuracy:
-                n300, n100, n50 = await self.possible_score_values(acc, bmap, 0)
-                score['100'] = n100
-                score['50'] = n50
-                score['miss'] = 0
-                score['combo'] = bmap.max_combo
-                print(score, "possible score")
-                json_payload = await self.format_payload(bmap, score)
-                calcd_score = await self.send_request(json_payload)
-                pp = round(calcd_score['performance_attributes']['pp'], 2)
-            else:
-                pp = 0
 
+        # Just passing acc value to the calc
+        for acc in accuracy, 100, 95, 90:
+            score['accuracy'] = acc
+            del score['100']
+            del score['50']
+            score['miss'] = 0
+            score['combo'] = bmap.max_combo
+            json_payload = await self.format_payload(bmap, score)
+            calcd_score = await self.send_request(json_payload)
+            pp = round(calcd_score['performance_attributes']['pp'], 2)
             self.possible_pp.append(pp)
