@@ -24,5 +24,4 @@ jobs:
           LOGIN: ${{ secrets.LOGIN }}
           OSU_TOKEN: ${{ secrets.OSU_TOKEN }}
           PASSW: ${{ secrets.PASSW }}
-        run: echo $LOGIN
-#        run: ./docker_start.sh
+        run: ./docker_start.sh
