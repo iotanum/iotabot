@@ -2,7 +2,7 @@ import aiohttp
 import os
 from osuapi import OsuApi, AHConnector
 
-osu_api = OsuApi(os.getenv("osu_token"), connector=AHConnector())
+osu_api = OsuApi(os.getenv("OSU_TOKEN"), connector=AHConnector())
 
 
 class Api:
@@ -45,7 +45,7 @@ class Api:
     async def get_user_best(user_id):
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://osu.ppy.sh/api/get_user_best?"
-                                   f"k={os.getenv('osu_token')}&"
+                                   f"k={os.getenv('OSU_TOKEN')}&"
                                    f"u={user_id}") as source:
                 Api.requests += 1
                 return await source.json()

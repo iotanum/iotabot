@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+    environment: prod
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build and run latest code
+        id: docker_build
+        env:
+          COMMAND_PREFIX: ${{ secrets.COMMAND_PREFIX }}
+          DB: ${{ secrets.DB }}
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          GBF_BOT_SERVER_PORT: ${{ secrets.GBF_BOT_SERVER_PORT }}
+          HTTP_SERVER_PORT: ${{ secrets.HTTP_SERVER_PORT }}
+          LOGIN: ${{ secrets.LOGIN }}
+          OSU_TOKEN: ${{ secrets.OSU_TOKEN }}
+          PASSW: ${{ secrets.PASSW }}
+        run: ./docker_start.sh

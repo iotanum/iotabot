@@ -20,9 +20,7 @@ class HTTPServer(commands.Cog):
 
     @commands.command()
     async def gbf(self, ctx, verification_code):
-        print(2)
         if isinstance(ctx.channel, discord.channel.DMChannel):
-            print(1)
             payload = {'verification_code': verification_code}
 
             async with aiohttp.ClientSession() as session:

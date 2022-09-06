@@ -7,11 +7,12 @@ import os
 import asyncio
 import discord
 
-load_dotenv("vars.env")
+if not os.getenv("DISCORD_TOKEN"):
+    load_dotenv(dotenv_path="vars.env")
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix=os.getenv("command_prefix"), intents=intents)
+bot = commands.Bot(command_prefix=os.getenv("COMMAND_PREFIX"), intents=intents)
 initial_extensions = ['cogs.osu.extensions',
                       'cogs.fun.extensions',
                       'cogs.gw.commands',
@@ -21,8 +22,8 @@ initial_extensions = ['cogs.osu.extensions',
 
 
 def load_database():
-    aconn = psycopg2.connect(dbname=os.getenv("db"), user=os.getenv("login"),
-                             password=os.getenv("passw"), async_=True)
+    aconn = psycopg2.connect(dbname=os.getenv("DB"), user=os.getenv("LOGIN"),
+                             password=os.getenv("PASSW"), async_=True)
     wait_select(aconn)
     return aconn.cursor()
 
@@ -43,7 +44,7 @@ async def main():
         bot.db = load_database()
         await load_extensions()
         bot.loop.create_task(bot.get_cog("HTTPServer").http_server())
-        await bot.start(os.getenv("discord_token"), reconnect=True)
+        await bot.start(os.getenv("DISCORD_TOKEN"), reconnect=True)
 
 if __name__ == '__main__':
     asyncio.run(main())

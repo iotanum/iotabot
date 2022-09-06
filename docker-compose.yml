@@ -6,6 +6,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - COMMAND_PREFIX=${COMMAND_PREFIX}
+      - DB=${DB}
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - GBF_BOT_SERVER_PORT=${GBF_BOT_SERVER_PORT}
+      - HTTP_SERVER_PORT=${HTTP_SERVER_PORT}
+      - LOGIN=${LOGIN}
+      - OSU_TOKEN=${OSU_TOKEN}
+      - PASSW=${PASSW}
     labels:
       "autoheal": "true"
     ports:
