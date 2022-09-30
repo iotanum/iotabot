@@ -132,9 +132,15 @@ class PP:
             score['accuracy'] = acc
 
             if acc != accuracy:
-                if score.get('100'):
-                    del score['100']
-
+                a300 = score['300']
+                b100 = 0
+                c50 = score['50']
+                while acc <= accuracy:
+                    acc = (((a300*300)+(b100*100)+(c50*50))/(300(a300+b100+c50)))*100
+                    b100 = b100+1
+                    acc = round(acc, 2)
+                score['100'] = b100-1
+                    
             score['miss'] = 0
             score['combo'] = bmap.max_combo
             json_payload = await self.format_payload(bmap, score)
