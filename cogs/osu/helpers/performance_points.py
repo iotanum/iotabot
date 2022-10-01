@@ -139,7 +139,7 @@ class PP:
                 while possible_acc <= accuracy:
                     possible_acc = (((a300*300)+(b100*100)+(c50*50))/(300*(a300+b100+c50)))*100
                     b100 = b100+1
-                    possible_acc = round(acc, 2)
+                    possible_acc = round(possible_acc, 2)
                 score['100'] = b100-1
                     
             score['miss'] = 0
