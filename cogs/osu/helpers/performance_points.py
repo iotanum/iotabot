@@ -132,15 +132,11 @@ class PP:
             score['accuracy'] = acc
 
             if acc != accuracy:
-                possible_acc = 0
-                a300 = score['300']
-                b100 = 0
-                c50 = score['50']
-                while possible_acc <= acc:
-                    possible_acc = (((a300*300)+(b100*100)+(c50*50))/(300*(a300+b100+c50)))*100
-                    b100 = b100+1
-                    
-                score['100'] = b100-1
+                if score.get('100'):
+                    del score['100']
+
+                if score.get('50'):
+                    del score['50']
                     
             score['miss'] = 0
             score['combo'] = bmap.max_combo
