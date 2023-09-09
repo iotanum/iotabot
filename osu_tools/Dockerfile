@@ -28,7 +28,7 @@ RUN echo "export PATH=$PATH:/usr/bin/dotnet" >> ~/.bashrc
 # Install python
 RUN apt-get install -y software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get install -y python3.9 python3.9-distutils python3.9-dev
+RUN apt-get install -y python3.10 python3.10-distutils python3.10-dev
 
 WORKDIR /app
 RUN mkdir osu-tools
