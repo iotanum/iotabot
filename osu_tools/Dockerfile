@@ -16,7 +16,7 @@ RUN git clone --depth 1 https://github.com/ppy/osu.git
 FROM ubuntu:22.04 as final
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get -y update && apt-get install -y wget curl build-essential
+RUN apt-get -y update && apt-get -y upgrade && apt-get install -y --fix-missing && apt-get install -y wget curl build-essential
 
 # Install dotnet
 RUN wget https://download.visualstudio.microsoft.com/download/pr/16b0b1af-6eab-4f9e-b9a4-9b29f6a1d681/4624e54b61cae05b1025211482f9c5e9/dotnet-sdk-7.0.400-linux-arm64.tar.gz
