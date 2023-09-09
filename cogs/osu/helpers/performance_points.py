@@ -137,7 +137,7 @@ class PP:
 
                 if score.get('50'):
                     del score['50']
-
+                    
             score['miss'] = 0
             score['combo'] = bmap.max_combo
             json_payload = await self.format_payload(bmap, score)

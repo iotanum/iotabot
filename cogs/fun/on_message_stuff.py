@@ -5,7 +5,7 @@ import random
 
 class OnMsg(commands.Cog):
     counter = 0
-    messages_until = 100
+    messages_until = 10000
 
     def __init__(self, bot):
         self.bot = bot
