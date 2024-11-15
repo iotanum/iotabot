@@ -37,8 +37,6 @@ class PP:
         if score.get('combo'):
             payload = payload | {"combo": score['combo']}
 
-        payload = payload | {"rework": "live"}
-
         return json.dumps(payload)
 
     async def send_request(self, payload):

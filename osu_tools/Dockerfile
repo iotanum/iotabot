@@ -34,11 +34,15 @@ COPY wrapper /app/wrapper
 WORKDIR /app/osu-tools
 RUN ./UseLocalOsu.sh
 
-# Preload nuget libs and stuffs
 WORKDIR /app/osu-tools/PerformanceCalculator
-RUN dotnet run -- --help
-# -r linux-arm64
-RUN dotnet publish --self-contained -p:PublishReadyToRun=true
+# remove unnecessary rulesets
+RUN sed -i '/ppy.osu.Game.Rulesets.Taiko/d' PerformanceCalculator.csproj && \
+    sed -i '/ppy.osu.Game.Rulesets.Catch/d' PerformanceCalculator.csproj && \
+    sed -i '/ppy.osu.Game.Rulesets.Mania/d' PerformanceCalculator.csproj
+
+# Preload nuget libs and stuffs
+RUN dotnet run -- simulate osu --help
+RUN dotnet publish -r linux-arm64 --no-self-contained -p:PublishReadyToRun=true
 
 WORKDIR /app/wrapper
 RUN python3.13 -m ensurepip --upgrade && python3.13 -m pip install --upgrade pip && python3.13 -m pip install -r req
