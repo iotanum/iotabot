@@ -52,4 +52,4 @@ def simulate_score(beatmap_id: str, params: dict):
         score.pop(0)
 
     score_dict = json.loads(" ".join(score))
-    return json.loads(score_dict)
+    return score_dict
