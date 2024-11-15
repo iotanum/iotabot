@@ -5,8 +5,8 @@ FROM ubuntu:24.04 AS base
 WORKDIR /app
 
 # Install essential tools and pull osu pp-calc repositories
-RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    git && update-ca-certificates && \ \
+RUN apt-get update -y && apt-get install -y \
+    git && \
     git clone --depth 1 https://github.com/ppy/osu-tools.git && \
     git clone --depth 1 https://github.com/ppy/osu.git && \
     rm -rf /var/lib/apt/lists/*
