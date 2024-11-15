@@ -1,62 +1,48 @@
-# Use a lightweight ARM-compatible base image
 FROM ubuntu:24.04 AS base
 
-# Set working directory
 WORKDIR /app
 
-# Install essential tools and pull osu pp-calc repositories
-RUN apt-get update -y && apt-get install -y \
-    git && \
-    git clone --depth 1 https://github.com/ppy/osu-tools.git && \
-    git clone --depth 1 https://github.com/ppy/osu.git && \
-    rm -rf /var/lib/apt/lists/*
+# Pull osu pp-calc stuff
+RUN apt-get update -y && apt-get install git -y
+RUN git clone --depth 1 https://github.com/ppy/osu-tools.git
+RUN git clone --depth 1 https://github.com/ppy/osu.git
 
-# Final stage
 FROM ubuntu:24.04 AS final
-
-# Set environment to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update and upgrade essential packages
-RUN apt-get -y update && apt-get -y upgrade && apt-get install -y --no-install-recommends \
-    software-properties-common && \
+RUN apt-get -y update && apt-get -y upgrade && apt-get install -y software-properties-common && \
     rm -rf /var/lib/apt/lists/*
 
-# Install dependencies for .NET 8 and Python 3.13
-RUN add-apt-repository ppa:dotnet/backports && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && apt-get install -y --no-install-recommends \
-    dotnet-sdk-8.0 python3.13-full python3-pip && \
-    rm -rf /var/lib/apt/lists/*
+# Install dotnet 8 sdk
+RUN add-apt-repository ppa:dotnet/backports
+RUN apt-get update && apt-get install -y dotnet-sdk-8.0
 
-# Set working directory and prepare application directories
+# Install python
+RUN add-apt-repository ppa:deadsnakes/ppa
+RUN apt-get install -y python3.13-full
+
 WORKDIR /app
-RUN mkdir -p osu-tools osu wrapper
+RUN mkdir osu-tools
+RUN mkdir osu
+RUN mkdir wrapper
 
-# Copy cloned repositories from the base stage
 COPY --from=base /app/osu-tools /app/osu-tools
 COPY --from=base /app/osu /app/osu
 COPY wrapper /app/wrapper
 
-# Build osu-tools
+# TODO fix pre-req csprojs, currently cloning whole repo
 WORKDIR /app/osu-tools
-RUN ./UseLocalOsu.sh && \
-    dotnet restore && \
-    dotnet publish -c Release -r linux-arm64 --self-contained -p:PublishReadyToRun=true -o /app/osu-tools/publish
+RUN ./UseLocalOsu.sh
 
-# Install Python dependencies
+# Preload nuget libs and stuffs
+WORKDIR /app/osu-tools/PerformanceCalculator
+RUN dotnet run -- --help
+# -r linux-arm64
+RUN dotnet publish --self-contained -p:PublishReadyToRun=true
+
 WORKDIR /app/wrapper
-RUN python3.13 -m pip install --no-cache-dir --upgrade pip && \
-    python3.13 -m pip install --no-cache-dir -r req
+RUN python3.13 -m ensurepip --upgrade && python3.13 -m pip install --upgrade pip && python3.13 -m pip install -r req
 
-# Reduce image size by removing unnecessary files
-RUN apt-get remove -y software-properties-common && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Expose port for the Python server
 EXPOSE 8080
 
-# Default command to run the Python server
 CMD ["python3.13", "-u", "server.py"]
