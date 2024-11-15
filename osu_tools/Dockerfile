@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install essential tools and pull osu pp-calc repositories
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    git && \
+    git && update-ca-certificates && \ \
     git clone --depth 1 https://github.com/ppy/osu-tools.git && \
     git clone --depth 1 https://github.com/ppy/osu.git && \
     rm -rf /var/lib/apt/lists/*
@@ -20,7 +20,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update and upgrade essential packages
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y --no-install-recommends \
     software-properties-common && \
-    sudo update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # Install dependencies for .NET 8 and Python 3.13
