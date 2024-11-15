@@ -51,9 +51,5 @@ def simulate_score(beatmap_id: str, params: dict):
     if score[0].lower().startswith('downloading'):
         score.pop(0)
 
-    print(command)
-    print(result)
-    for msg in score:
-        if msg.lower().startswith('{"score'):
-            result = msg
-    return json.loads(result)
+    score_dict = json.loads(" ".join(score))
+    return json.loads(score_dict)
