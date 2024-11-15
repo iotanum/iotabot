@@ -1,15 +1,10 @@
 from typing import List
 from subprocess import run
-import subprocess
 
 import os
 import json
 
-PP_CALC_DIR = "/app/osu-tools/PerformanceCalculator"
-DOTNET_VER = "net6.0"
-DOTNET_PUBLISH_RUNTIME = "linux-arm64"
-PUBLISHED_CALC = f"bin/Debug/{DOTNET_VER}/{DOTNET_PUBLISH_RUNTIME}/publish/PerformanceCalculator"
-OSU_SIMULATE_CMD = [PUBLISHED_CALC, "simulate", "osu"]
+from dotnet_config import *
 
 
 def fix_mods(mods: list) -> List:
@@ -21,27 +16,29 @@ def fix_mods(mods: list) -> List:
     return fixed_mods
 
 
-def simulate_score(beatmap_id: str, accuracy: str = None, combo: str = None, mods: list = None, goods: str = None,
-                   mehs: str = None, misses: str = None):
+def simulate_score(beatmap_id: str, params: dict):
     command = OSU_SIMULATE_CMD.copy()
+
+    beatmap_id = params.get('beatmap_id')
+    accuracy = params.get('accuracy')
+    combo = params.get('combo')
+    mods = params.get('mods')
+    goods = params.get('goods')
+    mehs = params.get('mehs')
+    misses = params.get('misses')
 
     command.append(beatmap_id)
 
     if mods:
         command = command + fix_mods(mods)
-
     if accuracy:
         command.append(f"--accuracy {accuracy}")
-
     if combo:
         command.append(f"--combo {combo}")
-
     if goods:
         command.append(f"--goods {goods}")
-
     if mehs:
         command.append(f"--mehs {mehs}")
-
     if misses:
         command.append(f"--misses {misses}")
 
@@ -49,12 +46,18 @@ def simulate_score(beatmap_id: str, accuracy: str = None, combo: str = None, mod
 
     os.chdir(PP_CALC_DIR)
     result = run(command, check=True, capture_output=True, text=True)
-    result = result.stdout
-    result = result.split("\n")
-    print(command)
-    print(result)
-    for msg in result:
-        if msg.lower().startswith('{"score'):
-            result = msg
 
-    return json.loads(result)
+    score = result.stdout.split("\n")
+    if score[0].lower().startswith('downloading'):
+        score.pop(0)
+
+    # Manipulate the json to be more readable
+    score_dict = json.loads(" ".join(score))
+    score_inner = score_dict.get("score", {})
+    score = {
+        **score_inner,
+        'p_attr': score_dict.get("performance_attributes", {}),
+        'd_attr': score_dict.get("difficulty_attributes", {}),
+    }
+
+    return score

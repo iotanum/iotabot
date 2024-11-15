@@ -1,59 +1,62 @@
-FROM ubuntu:22.04 as base
+# Use a lightweight ARM-compatible base image
+FROM ubuntu:24.04 AS base
 
+# Set working directory
 WORKDIR /app
 
-# Pull osu pp-calc stuff
-RUN apt-get update -y && apt-get install git -y
-RUN git clone --depth 1 https://github.com/ppy/osu-tools.git
-RUN git clone --depth 1 https://github.com/ppy/osu.git
+# Install essential tools and pull osu pp-calc repositories
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    git && \
+    git clone --depth 1 https://github.com/ppy/osu-tools.git && \
+    git clone --depth 1 https://github.com/ppy/osu.git && \
+    rm -rf /var/lib/apt/lists/*
 
-# Hacky tiem
-# Pull only the ruleset dirs from main osu repo and branch
-# TODO fix this, a lot of prereq
-#COPY set_and_pull_rulesets.sh .
-#RUN ./set_and_pull_rulesets.sh
+# Final stage
+FROM ubuntu:24.04 AS final
 
-FROM ubuntu:22.04 as final
+# Set environment to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get -y update && apt-get -y upgrade && apt-get install -y --fix-missing && apt-get install -y wget curl build-essential
+# Update and upgrade essential packages
+RUN apt-get -y update && apt-get -y upgrade && apt-get install -y --no-install-recommends \
+    software-properties-common && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install dotnet
-RUN wget https://download.visualstudio.microsoft.com/download/pr/16b0b1af-6eab-4f9e-b9a4-9b29f6a1d681/4624e54b61cae05b1025211482f9c5e9/dotnet-sdk-7.0.400-linux-arm64.tar.gz
-RUN mkdir -p /usr/bin/dotnet && tar zxf dotnet-sdk-7.0.400-linux-arm64.tar.gz -C /usr/bin/dotnet
-ENV DOTNET_ROOT="/usr/bin/dotnet"
-ENV PATH="$PATH:/usr/bin/dotnet"
-RUN echo "export PATH=$PATH:/usr/bin/dotnet" >> ~/.bashrc
+# Install dependencies for .NET 8 and Python 3.13
+RUN add-apt-repository ppa:dotnet/backports && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    dotnet-sdk-8.0 python3.13-full python3-pip && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install python
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get install -y python3.10 python3.10-distutils python3.10-dev
-
+# Set working directory and prepare application directories
 WORKDIR /app
-RUN mkdir osu-tools
-RUN mkdir osu
-RUN mkdir wrapper
+RUN mkdir -p osu-tools osu wrapper
 
+# Copy cloned repositories from the base stage
 COPY --from=base /app/osu-tools /app/osu-tools
 COPY --from=base /app/osu /app/osu
 COPY wrapper /app/wrapper
 
-# TODO fix pre-req csprojs, currently cloning whole repo
-# Update pp-calc with latest difficulty rulesets (got from *rulesets.sh)
+# Build osu-tools
 WORKDIR /app/osu-tools
-RUN ./UseLocalOsu.sh
+RUN ./UseLocalOsu.sh && \
+    dotnet restore && \
+    dotnet publish -c Release -r linux-arm64 --self-contained -p:PublishReadyToRun=true -o /app/osu-tools/publish
 
-# Preload nuget libs and stuffs
-WORKDIR /app/osu-tools/PerformanceCalculator
-RUN dotnet run -- --help
-RUN dotnet publish -r linux-arm64 --self-contained -p:PublishReadyToRun=true
-
+# Install Python dependencies
 WORKDIR /app/wrapper
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-RUN python3.9 get-pip.py
-RUN pip install -r req
+RUN python3.13 -m pip install --no-cache-dir --upgrade pip && \
+    python3.13 -m pip install --no-cache-dir -r req
 
+# Reduce image size by removing unnecessary files
+RUN apt-get remove -y software-properties-common && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Expose port for the Python server
 EXPOSE 8080
 
-CMD ["python3.9", "-u", "server.py"]
+# Default command to run the Python server
+CMD ["python3.13", "-u", "server.py"]
