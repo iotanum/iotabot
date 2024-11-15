@@ -110,9 +110,10 @@ class PP:
         if mods:
             score = score | {'mods': mods}
 
-        print(score, "sukonstruotas score in calculator func")
 
         json_payload = await self.format_payload(beatmap, score)
+        print(json_payload, "sukonstruotas score in calculator func")
+
         calcd_score = await self.send_request(json_payload)
 
         # need to change self variables to a proper object return
