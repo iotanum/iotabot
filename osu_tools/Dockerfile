@@ -20,6 +20,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update and upgrade essential packages
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y --no-install-recommends \
     software-properties-common && \
+    sudo update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # Install dependencies for .NET 8 and Python 3.13
