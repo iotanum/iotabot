@@ -26,7 +26,15 @@ async def calculate(request):
 
     print(body, "calculating this")
 
-    score = simulate_score(body['beatmap_id'], body)
+    score = simulate_score(
+                           body['beatmap_id'],
+                           accuracy=body.get('accuracy'),
+                           combo=body.get('combo'),
+                           mods=body.get('mods'),
+                           goods=body.get('good'),
+                           mehs=body.get('meh'),
+                           misses=body.get('miss'),
+                           )
     return web.json_response(data=score)
 
 
