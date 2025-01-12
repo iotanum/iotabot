@@ -1,54 +1,37 @@
----
-version: '3.7'
 services:
-  iotabot:
-    privileged: true
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      - COMMAND_PREFIX=${COMMAND_PREFIX}
-      - DB=${DB}
-      - DISCORD_TOKEN=${DISCORD_TOKEN}
-      - GBF_BOT_SERVER_PORT=${GBF_BOT_SERVER_PORT}
-      - HTTP_SERVER_PORT=${HTTP_SERVER_PORT}
-      - LOGIN=${LOGIN}
-      - OSU_TOKEN=${OSU_TOKEN}
-      - PASSW=${PASSW}
-    labels:
-      "autoheal": "true"
-    ports:
-      - "8090:8090"
-      - "80:80"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8090/status"]
-      interval: 60s
-      timeout: 3s
-      retries: 10
-    volumes:
-      - '/run/postgresql:/run/postgresql'
-    container_name: iotabot
-    restart: always
+#  iotabot:
+#    privileged: true
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8090:8090"
+#      - "80:80"
+#    volumes:
+#      - '/db_data:/db_data'
+#    container_name: iotabot
+#    restart: always
 
-  pp:
+  db:
+    image: postgres:13.16-alpine
+    volumes:
+      - ./db_data:/var/lib/postgresql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: osu
+    ports:
+      - "5433:5432"
+
+  pp_calc:
     build:
-      context: ./osu_tools
+      context: ./pp_calculator
       dockerfile: Dockerfile
     ports:
       - "8091:8080"
-    labels:
-      "autoheal": "true"
-    container_name: osu_tools_wrapper
+    container_name: osu_tools
     restart: always
 
-  autoheal:
-    restart: always
-    privileged: true
-    image: willfarrell/autoheal
-    container_name: autoheal
-    volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock'
-    environment:
-      - AUTOHEAL_INTERVAL=120
-      - CURL_TIMEOUT=30
-      - AUTOHEAL_START_PERIOD=120
+
+volumes:
+  db_data:

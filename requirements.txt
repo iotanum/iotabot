@@ -1,9 +1,0 @@
-discord.py
-osuapi
-psutil
-psycopg2
-python-dotenv
-pyttanko
-requests
-aiohttp
-requests_html

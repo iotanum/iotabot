@@ -1,0 +1,11 @@
+ossapi[async]
+python-dotenv
+sqlalchemy
+psycopg[binary,pool]
+greenlet
+alembic
+discord.py
+aiohttp
+psutil
+ruff
+isort
