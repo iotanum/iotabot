@@ -1,4 +1,4 @@
-FROM python:3.13.0-slim
+FROM python:3.11.0-slim
 
 WORKDIR /iotabot
 
@@ -14,3 +14,4 @@ RUN pip install --upgrade pip
 RUN pip install -r req
 
 CMD ["python", "-u", "main.py"]
+

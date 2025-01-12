@@ -1,16 +1,16 @@
 services:
-#  iotabot:
-#    privileged: true
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    ports:
-#      - "8090:8090"
-#      - "80:80"
-#    volumes:
-#      - '/db_data:/db_data'
-#    container_name: iotabot
-#    restart: always
+  iotabot:
+    privileged: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+      - "80:80"
+    volumes:
+      - '/db_data:/db_data'
+    container_name: iotabot
+    restart: always
 
   db:
     image: postgres:13.16-alpine
