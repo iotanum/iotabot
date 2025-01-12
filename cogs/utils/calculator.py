@@ -1,12 +1,12 @@
 import logging
-import os
 
 import aiohttp
 
+from app.environment import APP_CONFIG
 from app.models.scores import Scores
 
-CALC_HOST = os.getenv("CALC_HOST", "localhost")
-CALC_PORT = os.getenv("CALC_PORT", "8080")
+CALC_HOST = APP_CONFIG.get("CALC_HOST", "localhost")
+CALC_PORT = APP_CONFIG.get("CALC_PORT", "8080")
 CALC_URL = f"http://{CALC_HOST}:{CALC_PORT}/calculate"
 
 

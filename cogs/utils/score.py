@@ -1,5 +1,4 @@
 import logging
-
 from typing import Optional
 
 from ossapi import Score
@@ -45,7 +44,9 @@ async def is_new_score(db_sess: AsyncSession, user_id: int) -> Optional[Scores]:
         db_sess, user_id, new_score.beatmap.id, new_score.ended_at
     )
     if not db_score:
-        logging.info(f"New score found for user_id '{user_id}' - '{new_score.beatmap.id}', at '{new_score.ended_at}'")
+        logging.info(
+            f"New score found for user_id '{user_id}' - '{new_score.beatmap.id}', at '{new_score.ended_at}'"
+        )
         # save all scores, send only passed ones
         score = await add_score(db_sess, new_score)
         if score.passed:

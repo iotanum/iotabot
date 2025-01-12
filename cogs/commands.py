@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 import discord
 from discord import app_commands
@@ -43,7 +43,9 @@ class Commands(commands.Cog):
         except Exception as e:
             await interaction.followup.send(f"❌ An unexpected error occurred: {e}")
 
-    async def _handle_user_request(self, interaction: discord.Interaction, user: str | int):
+    async def _handle_user_request(
+        self, interaction: discord.Interaction, user: str | int
+    ):
         osu_db_user = await User.get(self.bot.db_session, user)
         if osu_db_user:
             await self._send_latest_score(interaction, osu_db_user.user_id)

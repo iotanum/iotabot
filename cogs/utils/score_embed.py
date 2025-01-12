@@ -66,11 +66,12 @@ async def is_new_highscore(score: Scores) -> Optional[int]:
     now = datetime.now()
     if latest_datetime:
         if (
-                now - timedelta(days=1)
-                <= latest_datetime.replace(tzinfo=None)
-                <= now + timedelta(days=1)
+            now - timedelta(days=1)
+            <= latest_datetime.replace(tzinfo=None)
+            <= now + timedelta(days=1)
         ):
             return latest_index
+
 
 async def create_score_embed(db, score: Scores) -> discord.Embed:
     """
