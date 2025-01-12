@@ -12,7 +12,3 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip
 
 RUN pip install -r req
-
-RUN alembic upgrade head
-
-CMD ["python", "-u", "main.py"]

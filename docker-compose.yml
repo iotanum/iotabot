@@ -7,6 +7,7 @@ services:
       - '/db_data:/db_data'
     container_name: bot
     restart: always
+    command: bash -c "alembic upgrade head && python -u main.py"
     depends_on:
       - db
 
