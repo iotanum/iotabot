@@ -9,13 +9,15 @@ services:
       - "80:80"
     volumes:
       - '/db_data:/db_data'
-    container_name: iotabot
+    container_name: bot
+    hostname: bot
     restart: always
     depends_on:
       - db
 
   db:
     image: postgres:13.16-alpine
+    restart: always
     volumes:
       - ./db_data:/var/lib/postgresql
     environment:
@@ -23,6 +25,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: osu
     container_name: db
+    hostname: db
     ports:
       - "5433:5432"
 
@@ -32,7 +35,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8091:8080"
-    container_name: osu_tools
+    container_name: pp_calc
+    hostname: pp_calc
     restart: always
 
 
