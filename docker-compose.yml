@@ -1,16 +1,11 @@
 services:
   iotabot:
-    privileged: true
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8090:8090"
-      - "80:80"
     volumes:
       - '/db_data:/db_data'
     container_name: bot
-    hostname: bot
     restart: always
     depends_on:
       - db
@@ -25,9 +20,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: osu
     container_name: db
-    hostname: db
     ports:
-      - "5433:5432"
+      - "5432:5432"
 
   pp_calc:
     build:
@@ -36,7 +30,6 @@ services:
     ports:
       - "8091:8080"
     container_name: pp_calc
-    hostname: pp_calc
     restart: always
 
 
