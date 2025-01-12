@@ -8,3 +8,4 @@ cogs/anime/*
 .env.local
 test.py
 test.sh
+db_data
