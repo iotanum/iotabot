@@ -11,6 +11,8 @@ services:
       - '/db_data:/db_data'
     container_name: iotabot
     restart: always
+    depends_on:
+      - db
 
   db:
     image: postgres:13.16-alpine
