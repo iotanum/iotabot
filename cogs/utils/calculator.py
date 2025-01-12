@@ -1,10 +1,13 @@
 import logging
+import os
 
 import aiohttp
 
 from app.models.scores import Scores
 
-CALC_URL = "http://pp_calc:8080/calculate"
+CALC_HOST = os.getenv("CALC_HOST", "localhost")
+CALC_PORT = os.getenv("CALC_PORT", "8080")
+CALC_URL = f"http://{CALC_HOST}:{CALC_PORT}/calculate"
 
 
 async def calculate_scores(score: Scores) -> dict:
