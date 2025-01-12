@@ -4,7 +4,7 @@ import aiohttp
 
 from app.models.scores import Scores
 
-CALC_URL = "http://pp_calc:8091/calculate"
+CALC_URL = "http://pp_calc:8080/calculate"
 
 
 async def calculate_scores(score: Scores) -> dict:
