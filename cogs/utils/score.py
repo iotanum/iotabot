@@ -36,11 +36,7 @@ async def is_new_score(db_sess: AsyncSession, user_id: int) -> Optional[Scores]:
     """
     Checks if a new score is available for the user and adds it if it is not already in the database.
     """
-    import time
-    start = time.time()
     new_score = await get_recent_user_score(user_id, include_fails=True)
-    logging.info(f"Time taken to get recent user score: {time.time() - start}, {user_id}")
-    start = time.time()
     if not new_score:
         return None
 
@@ -48,8 +44,6 @@ async def is_new_score(db_sess: AsyncSession, user_id: int) -> Optional[Scores]:
     db_score = await Scores.get(
         db_sess, user_id, new_score.beatmap.id, new_score.ended_at
     )
-    logging.info(f"Time taken to get score from database: {time.time() - start}, {user_id}")
-    start = time.time()
     if not db_score:
         logging.info(f"New score found for user_id '{user_id}' - '{new_score.beatmap.id}', at '{new_score.ended_at}'")
         # save all scores, send only passed ones
@@ -60,5 +54,4 @@ async def is_new_score(db_sess: AsyncSession, user_id: int) -> Optional[Scores]:
     else:
         # Clean old scores if the new score already exists
         await Scores.clean_old_scores(db_sess, user_id)
-        logging.info(f"Time taken to clean old scores: {time.time() - start}, {user_id}")
         return None

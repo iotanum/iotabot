@@ -86,11 +86,9 @@ class ScoreTracker(commands.Cog):
         while not self.bot.is_closed():
             tracking_map = await self.get_tracking_channels()
 
-            start = time.time()
             async with asyncio.TaskGroup() as tg:
                 for user_id, channels in tracking_map.items():
                     tg.create_task(self.notify_new_scores(user_id, channels))
-            logging.info("Task group completed in %.2fs", time.time() - start)
             sleep_time = await self.calculate_sleep_time()
             await asyncio.sleep(sleep_time)
 

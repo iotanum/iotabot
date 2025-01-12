@@ -8,6 +8,7 @@ services:
     container_name: bot
     restart: always
     command: bash -c "alembic upgrade head && python -u main.py"
+    network_mode: host
     depends_on:
       - db
 
