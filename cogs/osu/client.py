@@ -41,6 +41,9 @@ async def get_user_highscores(user_id: int, limit: int = 10) -> Optional[list[Sc
     except aiohttp.client_exceptions.ClientConnectorError:
         logging.error(f"ClientConnectorError, {user_id}")
         return
+    except aiohttp.client_exceptions.ServerDisconnectedError:
+        logging.error(f"ServerDisconnectedError, {user_id}")
+        return
     except asyncio.TimeoutError:
         logging.error(f"TimeoutError, {user_id}")
         return
@@ -66,6 +69,9 @@ async def get_recent_user_score(
         return
     except aiohttp.client_exceptions.ClientConnectorError:
         logging.error(f"ClientConnectorError, {user_id}")
+        return
+    except aiohttp.client_exceptions.ServerDisconnectedError:
+        logging.error(f"ServerDisconnectedError, {user_id}")
         return
     except asyncio.TimeoutError:
         logging.error(f"TimeoutError, {user_id}")
