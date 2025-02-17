@@ -70,10 +70,10 @@ class ScoreTracker(commands.Cog):
         sleep_time = max(
             self.min_sleep_duration, min(sleep_time, self.max_sleep_duration)
         )
-        logging.info(
-            f"Sleeping - {sleep_time:.2f}s, remaining requests - {remaining_calls}, "
-            f"next minute window in: {60 - time_elapsed:.2f}s"
-        )
+        # logging.info(
+        #     f"Sleeping - {sleep_time:.2f}s, remaining requests - {remaining_calls}, "
+        #     f"next minute window in: {60 - time_elapsed:.2f}s"
+        # )
         return max(self.min_sleep_duration, min(sleep_time, self.max_sleep_duration))
 
     async def run_tracking_loop(self):
