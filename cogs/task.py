@@ -83,14 +83,17 @@ class ScoreTracker(commands.Cog):
         await self.bot.wait_until_ready()
 
         while not self.bot.is_closed():
-            tracking_map = await self.get_tracking_channels()
+            try:
+                tracking_map = await self.get_tracking_channels()
 
-            async with asyncio.TaskGroup() as tg:
-                for user_id, channels in tracking_map.items():
-                    tg.create_task(self.notify_new_scores(user_id, channels))
-            sleep_time = await self.calculate_sleep_time()
-            await asyncio.sleep(sleep_time)
-
+                async with asyncio.TaskGroup() as tg:
+                    for user_id, channels in tracking_map.items():
+                        tg.create_task(self.notify_new_scores(user_id, channels))
+                sleep_time = await self.calculate_sleep_time()
+                await asyncio.sleep(sleep_time)
+            except Exception as e:
+                logging.error(f"Error in tracking loop: {e}")
+                pass
 
 async def setup(bot):
     await bot.add_cog(ScoreTracker(bot))
