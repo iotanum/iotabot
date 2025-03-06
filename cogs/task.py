@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import traceback
 
 from discord.ext import commands
 
@@ -92,7 +93,7 @@ class ScoreTracker(commands.Cog):
                 sleep_time = await self.calculate_sleep_time()
                 await asyncio.sleep(sleep_time)
             except Exception as e:
-                logging.error(f"Error in tracking loop: {e}")
+                logging.error(f"Error in tracking loop: {traceback.format_exc()}")
                 pass
 
 async def setup(bot):

@@ -127,8 +127,8 @@ async def create_score_embed(db, score: Scores) -> discord.Embed:
     embed.add_field(
         name="🎵Beatmap Stats",
         value=f"**BPM:** {int(bpm)}\n"
-        f"`AR: {played_score_calc['d_attr']['approach_rate']:.2f} "
-        f"OD: {played_score_calc['d_attr']['overall_difficulty']:.2f} "
+        f"`AR: {beatmap.ar:.2f} "
+        f"OD: {beatmap.difficulty_rating:.2f} "
         f"HP: {beatmap.drain:.2g} "
         f"CS: {beatmap.cs:.2g}`\n"
         f"`SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}`",
