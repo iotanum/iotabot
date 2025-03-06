@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Pull osu pp-calc stuff
 RUN apt-get update -y && apt-get install git -y
-RUN git clone --depth 1 https://github.com/ppy/osu-tools.git
+RUN git clone https://github.com/ppy/osu-tools.git
 
 FROM ubuntu:24.04 AS final
 ENV DEBIAN_FRONTEND=noninteractive
@@ -12,7 +12,7 @@ ENV DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 
 # https://github.com/ppy/osu-infrastructure/wiki/Star-Rating-and-Performance-Points
 # or https://github.com/ppy/osu-queue-score-statistics/commits/master/
-ENV LIVE_OSU_RULESET_VERSION=2025.227.0
+ENV LIVE_OSU_RULESET_VERSION=2025.304.0
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y software-properties-common && \
     rm -rf /var/lib/apt/lists/*
