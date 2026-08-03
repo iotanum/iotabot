@@ -12,7 +12,8 @@ ENV DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 
 # https://github.com/ppy/osu-infrastructure/wiki/Star-Rating-and-Performance-Points
 # or https://github.com/ppy/osu-queue-score-statistics/commits/master/
-ENV LIVE_OSU_RULESET_VERSION=2026.731.0
+# or https://github.com/ppy/osu-queue-score-statistics/blob/master/osu.Server.Queues.ScoreStatisticsProcessor/osu.Server.Queues.ScoreStatisticsProcessor.csproj#L17-L21
+ENV LIVE_OSU_RULESET_VERSION=2026.730.0
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y software-properties-common && \
     rm -rf /var/lib/apt/lists/*
