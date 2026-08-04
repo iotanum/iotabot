@@ -21,6 +21,8 @@ class ScoreTracker(commands.Cog):
         self.max_api_calls_per_minute = 500
         self.min_sleep_duration = 1
         self.max_sleep_duration = 5
+        self.max_concurrent_lookups = 5
+        self.request_semaphore = asyncio.Semaphore(self.max_concurrent_lookups)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -43,9 +45,12 @@ class ScoreTracker(commands.Cog):
         """
         Checks for new scores for a user and sends notifications to the associated channels.
         """
-        score = await is_new_score(self.db, user_id)
+        async with self.request_semaphore:
+            score = await is_new_score(self.db, user_id)
+            if score:
+                embed = await create_score_embed(self.db, score)
+
         if score:
-            embed = await create_score_embed(self.db, score)
             for channel in channels:
                 await channel.send(embed=embed)
                 await asyncio.sleep(0.1)  # Avoid hitting rate limits.

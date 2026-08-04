@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from typing import Optional
 
 import aiohttp
@@ -13,79 +14,88 @@ api = OssapiAsync(
     int(APP_CONFIG.get("OSU_CLIENT_ID")), APP_CONFIG.get("OSU_CLIENT_SECRET")
 )
 
+DEFAULT_RATE_LIMIT_COOLDOWN = 30.0
+_rate_limited_until = 0.0
+
+
+async def _call_api(coro, *, log_id):
+    """
+    Runs an osu! API call, skipping it entirely while we're in a rate-limit
+    cooldown, and normalizing transient network/API errors to None.
+    """
+    global _rate_limited_until
+
+    if time.monotonic() < _rate_limited_until:
+        return None
+
+    try:
+        result = await coro
+        RequestCounter.increment()
+        return result
+    except aiohttp.ClientResponseError as e:
+        if e.status == 429:
+            retry_after = DEFAULT_RATE_LIMIT_COOLDOWN
+            header_value = e.headers.get("Retry-After") if e.headers else None
+            if header_value:
+                try:
+                    retry_after = float(header_value)
+                except ValueError:
+                    pass
+            _rate_limited_until = time.monotonic() + retry_after
+            logging.error(
+                f"osu! API rate limited us (429) on '{log_id}'; "
+                f"pausing osu! API calls for {retry_after:.0f}s"
+            )
+        else:
+            logging.error(f"{type(e).__name__} ({e.status}) for '{log_id}'")
+        return None
+    except aiohttp.client_exceptions.ClientConnectorError:
+        logging.error(f"ClientConnectorError, {log_id}")
+        return None
+    except aiohttp.client_exceptions.ServerDisconnectedError:
+        logging.error(f"ServerDisconnectedError, {log_id}")
+        return None
+    except asyncio.TimeoutError:
+        logging.error(f"TimeoutError, {log_id}")
+        return None
+
 
 async def get_user(user: str | int) -> Optional[User]:
     try:
-        result = await api.user(user, mode=GameMode.OSU)
-        RequestCounter.increment()
-        return result
+        return await _call_api(api.user(user, mode=GameMode.OSU), log_id=user)
     except ValueError:
-        return
+        return None
 
 
 async def get_user_highscores(user_id: int, limit: int = 10) -> Optional[list[Score]]:
-    try:
-        scores = await api.user_scores(
-            user_id,
-            type=ScoreType.BEST,
-            mode=GameMode.OSU,
-            limit=limit,
-        )
-        RequestCounter.increment()
-
-        if scores:
-            return scores
-    except aiohttp.client_exceptions.ContentTypeError:
-        logging.error(f"ContentTypeError for '{user_id}'")
-        return
-    except aiohttp.client_exceptions.ClientConnectorError:
-        logging.error(f"ClientConnectorError, {user_id}")
-        return
-    except aiohttp.client_exceptions.ServerDisconnectedError:
-        logging.error(f"ServerDisconnectedError, {user_id}")
-        return
-    except asyncio.TimeoutError:
-        logging.error(f"TimeoutError, {user_id}")
-        return
+    scores = await _call_api(
+        api.user_scores(user_id, type=ScoreType.BEST, mode=GameMode.OSU, limit=limit),
+        log_id=user_id,
+    )
+    return scores or None
 
 
 async def get_recent_user_score(
     user_id: int, include_fails: bool = True, limit: int = 1
 ) -> Optional[Score]:
-    try:
-        score = await api.user_scores(
+    scores = await _call_api(
+        api.user_scores(
             user_id,
             type=ScoreType.RECENT,
             include_fails=include_fails,
             mode=GameMode.OSU,
             limit=limit,
-        )
-        RequestCounter.increment()
-
-        if score:
-            return score[0]
-    except aiohttp.client_exceptions.ContentTypeError:
-        logging.error(f"ContentTypeError for '{user_id}'")
-        return
-    except aiohttp.client_exceptions.ClientConnectorError:
-        logging.error(f"ClientConnectorError, {user_id}")
-        return
-    except aiohttp.client_exceptions.ServerDisconnectedError:
-        logging.error(f"ServerDisconnectedError, {user_id}")
-        return
-    except asyncio.TimeoutError:
-        logging.error(f"TimeoutError, {user_id}")
-        return
+        ),
+        log_id=user_id,
+    )
+    return scores[0] if scores else None
 
 
-async def get_beatmap(beatmap_id: int) -> Beatmap:
-    result = await api.beatmap(beatmap_id=beatmap_id)
-    RequestCounter.increment()
-    return result
+async def get_beatmap(beatmap_id: int) -> Optional[Beatmap]:
+    return await _call_api(api.beatmap(beatmap_id=beatmap_id), log_id=beatmap_id)
 
 
-async def get_beatmapset(beatmapset_id: int) -> Beatmapset:
-    result = await api.beatmapset(beatmapset_id=beatmapset_id)
-    RequestCounter.increment()
-
-    return result
+async def get_beatmapset(beatmapset_id: int) -> Optional[Beatmapset]:
+    return await _call_api(
+        api.beatmapset(beatmapset_id=beatmapset_id), log_id=beatmapset_id
+    )
