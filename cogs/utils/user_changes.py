@@ -40,7 +40,7 @@ async def get_user_changes(
             continue
 
         db_value = getattr(db_user, api_key, None)
-        if db_value and db_value != api_value:
+        if db_value and api_value is not None and db_value != api_value:
             logging.info(
                 f"Changes for '{user_id}' - '{api_key}' from '{db_value}' to '{api_value}'"
             )

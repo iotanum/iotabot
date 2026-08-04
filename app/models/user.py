@@ -24,14 +24,14 @@ class User(Base):
     url: Mapped[str] = mapped_column()
     avatar_url: Mapped[str] = mapped_column()
     country_code: Mapped[str] = mapped_column()
-    previous_usernames: Mapped[str] = mapped_column()
+    previous_usernames: Mapped[Optional[str]] = mapped_column()
 
     global_rank: Mapped[Optional[int]] = mapped_column()
     country_rank: Mapped[Optional[int]] = mapped_column()
     hit_accuracy: Mapped[float] = mapped_column()
     play_count: Mapped[int] = mapped_column()
-    play_time: Mapped[int] = mapped_column()
-    pp: Mapped[float] = mapped_column()
+    play_time: Mapped[Optional[int]] = mapped_column()
+    pp: Mapped[Optional[float]] = mapped_column()
 
     scores: Mapped[Optional[List["Scores"]]] = relationship(back_populates="user")
     tracking_channels: Mapped[Optional[List["TrackingChannels"]]] = relationship(
@@ -157,6 +157,7 @@ class User(Base):
         if user:
             new_values = await cls.filter_valid_kwargs(api_user)
             new_values.pop("user_id", None)
+            new_values = {k: v for k, v in new_values.items() if v is not None}
             await db.update(user, new_values)
             logging.info(
                 f"Updated user '{user.username}' with new values: {new_values}."

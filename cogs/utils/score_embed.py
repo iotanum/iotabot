@@ -118,7 +118,7 @@ async def create_score_embed(db, score: Scores) -> discord.Embed:
 
     # Set author details with user info
     embed.set_author(
-        name=f"{user.username} | #{user.global_rank} - {user.pp}pp",
+        name=f"{user.username} | #{user.global_rank} - {user.pp if user.pp is not None else 'N/A'}pp",
         icon_url=user.avatar_url,
         url=user.url,
     )

@@ -50,17 +50,25 @@ async def create_user_embed(user):
     embed.add_field(name="Play Count", value=user.statistics.play_count, inline=True)
     embed.add_field(
         name="Play Time",
-        value=f"{user.statistics.play_time // 3600} hours",
+        value=(
+            f"{user.statistics.play_time // 3600} hours"
+            if user.statistics.play_time is not None
+            else "N/A"
+        ),
         inline=True,
     )
     embed.add_field(
-        name="Performance Points (PP)", value=f"{user.statistics.pp:.2f}", inline=True
+        name="Performance Points (PP)",
+        value=f"{user.statistics.pp:.2f}" if user.statistics.pp is not None else "N/A",
+        inline=True,
     )
 
     # Previous usernames (if they exist)
     if user.previous_usernames:
         embed.add_field(
-            name="Previous Usernames", value=user.previous_usernames, inline=False
+            name="Previous Usernames",
+            value=", ".join(user.previous_usernames),
+            inline=False,
         )
 
     profile_url = get_profile_url(user.id)
