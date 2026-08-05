@@ -56,12 +56,12 @@ class Commands(commands.Cog):
             await interaction.followup.send(f"❌ User '{user}' not found.")
             return
 
-        score = await osu_client.get_recent_user_score(osu_api_user.id)
-        if not score:
+        scores = await osu_client.get_recent_user_scores(osu_api_user.id)
+        if not scores:
             await interaction.followup.send("❌ No scores found.")
             return
 
-        db_score = await Scores.add(self.bot.db_session, score)
+        db_score = await Scores.add(self.bot.db_session, scores[0])
         embed = await create_score_embed(self.bot.db_session, db_score)
         await interaction.followup.send(embed=embed)
 

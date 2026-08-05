@@ -31,7 +31,6 @@ RUN mkdir osu-tools
 RUN mkdir wrapper
 
 COPY --from=base /app/osu-tools /app/osu-tools
-COPY wrapper /app/wrapper
 
 # TODO fix pre-req csprojs, currently cloning whole repo
 WORKDIR /app/osu-tools/PerformanceCalculator
@@ -41,10 +40,13 @@ RUN sed -i 's/\(PackageReference Include="ppy.osu.Game" Version="\)[^"]*/\1'"$LI
     sed -i 's/\(PackageReference Include="ppy.osu.Game.Rulesets.Catch" Version="\)[^"]*/\1'"$LIVE_OSU_RULESET_VERSION"'/' PerformanceCalculator.csproj && \
     sed -i 's/\(PackageReference Include="ppy.osu.Game.Rulesets.Mania" Version="\)[^"]*/\1'"$LIVE_OSU_RULESET_VERSION"'/' PerformanceCalculator.csproj
 
-# Preload nuget libs and stuffs
+# Restores the nuget packages and builds bin/Debug/net8.0/PerformanceCalculator,
+# which is the binary the wrapper runs
 RUN dotnet run -- simulate osu --help
-RUN dotnet publish -r linux-arm64 --self-contained -p:PublishReadyToRun=true
 
+# Copied after the build on purpose - editing the wrapper should not invalidate
+# the layer above and force a full dotnet restore and rebuild
+COPY wrapper /app/wrapper
 WORKDIR /app/wrapper
 RUN python3.13 -m ensurepip --upgrade && python3.13 -m pip install --upgrade pip && python3.13 -m pip install -r req
 

@@ -9,3 +9,6 @@ cogs/anime/*
 test.py
 test.sh
 db_data
+.venv/
+asd.py
+TASK.md

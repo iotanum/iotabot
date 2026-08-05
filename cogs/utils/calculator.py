@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import aiohttp
@@ -8,6 +9,12 @@ from app.models.scores import Scores
 CALC_HOST = APP_CONFIG.get("CALC_HOST", "localhost")
 CALC_PORT = APP_CONFIG.get("CALC_PORT", "8080")
 CALC_URL = f"http://{CALC_HOST}:{CALC_PORT}/calculate"
+
+# One request means five dotnet simulations, each pegging a core on the Pi that
+# also runs this bot and the database. Two in flight keeps the calculator's
+# own 2-process semaphore fed (~15% throughput, measured) at no extra CPU -
+# the sidecar's MAX_CONCURRENT_SIMULATIONS stays the real cap.
+_calc_semaphore = asyncio.Semaphore(2)
 
 
 async def calculate_scores(score: Scores) -> dict:
@@ -27,7 +34,7 @@ async def calculate_scores(score: Scores) -> dict:
 
     headers = {"Content-Type": "application/json"}
 
-    async with aiohttp.ClientSession() as session:
+    async with _calc_semaphore, aiohttp.ClientSession() as session:
         try:
             async with session.post(
                 CALC_URL, json=req_body, headers=headers, ssl=False

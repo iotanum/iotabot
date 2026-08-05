@@ -1,12 +1,11 @@
 import logging
-from typing import Optional
 
 from ossapi import Score
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.scores import Scores
 from app.models.user import User
-from cogs.osu.client import get_recent_user_score
+from cogs.osu.client import get_recent_user_scores
 
 
 async def add_score(db_sess: AsyncSession, new_api_score: Score) -> Scores:
@@ -31,28 +30,45 @@ async def update_user(db: AsyncSession, score: Score):
         await User.update_from_score(db, score)
 
 
-async def is_new_score(db_sess: AsyncSession, user_id: int) -> Optional[Scores]:
+async def is_new_score(
+    db_sess: AsyncSession, user_id: int, limit: int = 1
+) -> tuple[bool, list[Scores]]:
     """
-    Checks if a new score is available for the user and adds it if it is not already in the database.
+    Checks if new scores are available for the user and adds the ones not
+    already in the database. Returns `(check_completed, scores_to_post)`:
+    `check_completed` is False only when the score fetch failed, telling
+    the caller to re-check the user instead of advancing its play-count
+    bookkeeping; `scores_to_post` holds the newly stored passes, oldest
+    first.
     """
-    new_score = await get_recent_user_score(user_id, include_fails=True)
-    if not new_score:
-        return None
-
-    # Check if the score is already in the database
-    db_score = await Scores.get(
-        db_sess, user_id, new_score.beatmap.id, new_score.ended_at
+    recent_scores = await get_recent_user_scores(
+        user_id, include_fails=True, limit=limit
     )
-    if not db_score:
+    if recent_scores is None:
+        # Fetch failed - whatever the user played is still unaccounted for
+        return False, []
+    if not recent_scores:
+        # Fetch fine, the user has nothing in the API's recent window
+        return True, []
+
+    to_post = []
+    # Oldest first, so stored row ids stay chronological - clean_old_scores
+    # keeps the newest rows per category by id
+    for new_score in reversed(recent_scores):
+        db_score = await Scores.get(
+            db_sess, user_id, new_score.beatmap.id, new_score.ended_at
+        )
+        if db_score:
+            continue
         logging.info(
             f"New score found for user_id '{user_id}' - '{new_score.beatmap.id}', at '{new_score.ended_at}'"
         )
         # save all scores, send only passed ones
         score = await add_score(db_sess, new_score)
         if score.passed:
-            return score
-        return None
-    else:
-        # Clean old scores if the new score already exists
-        await Scores.clean_old_scores(db_sess, user_id)
-        return None
+            to_post.append(score)
+
+    # With the play-count gate, adds are the common case, so retention runs
+    # on every completed check that found scores in the window
+    await Scores.clean_old_scores(db_sess, user_id)
+    return True, to_post

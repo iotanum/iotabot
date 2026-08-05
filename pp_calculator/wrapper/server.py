@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from aiohttp import web
@@ -10,14 +11,16 @@ routes = web.RouteTableDef()
 async def calculate(request):
     body = json.loads(await request.text())
 
-    score = simulate_score(body)
+    score = await simulate_score(body)
 
     scores_dict = dict()
     scores_dict["score"] = score
 
     # Calculate possible scores
-    body_copy = body.copy()
+    possible_bodies = dict()
     for acc in [100, 95, 90]:
+        body_copy = body.copy()
+
         # Give "possible" accuracy for the calculated score
         body_copy["accuracy"] = acc
 
@@ -33,15 +36,22 @@ async def calculate(request):
         body_copy["misses"] = 0
         body_copy["combo"] = score["d_attr"]["max_combo"]
 
-        # Calculate possible score, give "acc" as key in scores_dict
-        scores_dict[acc] = simulate_score(body_copy)
+        # Give "acc" as key in scores_dict
+        possible_bodies[acc] = body_copy
 
     # simulate an "if_fc" score
     if_fc = body.copy()
     del if_fc["accuracy"]
     if_fc["combo"] = score["d_attr"]["max_combo"]
     if_fc["misses"] = 0
-    scores_dict["if_fc"] = simulate_score(if_fc)
+    possible_bodies["if_fc"] = if_fc
+
+    # None of these depend on each other, so run them together and let the
+    # semaphore in simulate_score decide how many actually execute at once
+    results = await asyncio.gather(
+        *(simulate_score(params) for params in possible_bodies.values())
+    )
+    scores_dict.update(zip(possible_bodies.keys(), results))
 
     return web.json_response(data=scores_dict)
 
