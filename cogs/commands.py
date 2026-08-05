@@ -8,7 +8,7 @@ import cogs.osu.client as osu_client
 from app.models.discord_users import DiscordUsers
 from app.models.scores import Scores
 from app.models.user import User
-from cogs.utils.score_embed import create_score_embed
+from cogs.utils.score_embed import create_score_view
 from cogs.utils.status_embed import create_status_embed
 
 
@@ -62,8 +62,8 @@ class Commands(commands.Cog):
             return
 
         db_score = await Scores.add(self.bot.db_session, scores[0])
-        embed = await create_score_embed(self.bot.db_session, db_score)
-        await interaction.followup.send(embed=embed)
+        view = await create_score_view(self.bot.db_session, db_score)
+        await interaction.followup.send(view=view)
 
     async def _handle_discord_user_request(self, interaction: discord.Interaction):
         discord_db_user = await DiscordUsers.get(self.bot.db_session, interaction)
@@ -81,8 +81,8 @@ class Commands(commands.Cog):
             await interaction.followup.send("❌ No scores found.")
             return
 
-        embed = await create_score_embed(self.bot.db_session, latest_score)
-        await interaction.followup.send(embed=embed)
+        view = await create_score_view(self.bot.db_session, latest_score)
+        await interaction.followup.send(view=view)
 
 
 async def setup(bot: commands.Bot):

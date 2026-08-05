@@ -8,7 +8,7 @@ from app.models.tracking_channels import TrackingChannels
 from cogs.osu import client as osu_client
 from cogs.osu.shared_state import RequestCounter
 from cogs.utils.score import is_new_score
-from cogs.utils.score_embed import create_score_embed
+from cogs.utils.score_embed import create_score_view
 
 
 class ScoreTracker(commands.Cog):
@@ -124,12 +124,12 @@ class ScoreTracker(commands.Cog):
                 self._play_counts[user_id] = observed_play_count
             if not scores:
                 return
-            embeds = [await create_score_embed(self.db, score) for score in scores]
+            views = [await create_score_view(self.db, score) for score in scores]
 
         for channel in channels:
-            for embed in embeds:
+            for view in views:
                 try:
-                    await channel.send(embed=embed)
+                    await channel.send(view=view)
                 except discord.HTTPException:
                     # Missing permissions or the like, don't let one channel stop
                     # the score from reaching the remaining ones

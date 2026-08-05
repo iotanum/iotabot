@@ -64,7 +64,9 @@ class Beatmap(Base):
 
         # Remove unwanted keys and add additional fields
         valid_beatmap.pop("beatmapset", None)  # Remove `beatmapset` if present
-        cover_url = getattr(score.beatmapset.covers, "list_2x", None)
+        # The full-width banner, not the small `list` thumbnail - the score post
+        # renders it as a hero image across the top of the card
+        cover_url = getattr(score.beatmapset.covers, "cover_2x", None)
         if cover_url:
             valid_beatmap["cover_url"] = cover_url
 
