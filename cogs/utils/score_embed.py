@@ -87,9 +87,9 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     fc_score_calc = scores["if_fc"]
 
     # Extract PP values for different accuracies
-    pp_ss = f"{scores['100']['p_attr']['pp']:.2f}pp"
-    pp_95 = f"{scores['95']['p_attr']['pp']:.2f}pp"
-    pp_90 = f"{scores['90']['p_attr']['pp']:.2f}pp"
+    pp_ss = f"{scores['100']['p_attr']['pp']:,.2f}pp"
+    pp_95 = f"{scores['95']['p_attr']['pp']:,.2f}pp"
+    pp_90 = f"{scores['90']['p_attr']['pp']:,.2f}pp"
 
     # Assign color by beatmap status - the container's accent bar replaces what
     # used to be the embed colour
@@ -111,21 +111,29 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     user = await OsuDbUser.get(db, score.user_id)
     assert user, f"User '{score.user_id}' missing for score '{score.id}'"
 
+    # `[version](6.02⭐)` is markdown link syntax, so the star rating is set off
+    # with a separator instead of being parenthesised right after the brackets
+    difficulty = f"[{beatmap.version}]{mods}".rstrip()
+
+    # X/XH are osu!'s SS grades and SH is a silver S; players read them as SS/S
+    grade = {"X": "SS", "XH": "SS", "SH": "S"}.get(score.rank, score.rank)
+
+    global_rank = f"#{user.global_rank:,}" if user.global_rank is not None else "#N/A"
+    user_pp = f"{user.pp:,.0f}pp" if user.pp is not None else "N/A"
+
     blocks: list[ui.Item] = [
         # The beatmapset banner, full width across the top of the card
         ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
         ui.TextDisplay(
-            f"-# [{user.username}]({user.url}) | "
-            f"#{user.global_rank} - "
-            f"{user.pp if user.pp is not None else 'N/A'}pp\n"
+            f"-# [{user.username}]({user.url}) | {global_rank} - {user_pp}\n"
             f"### [{beatmapset.artist} - {beatmapset.title}]({beatmap.url})\n"
-            f"[{beatmap.version}]{mods}"
-            f"({played_score_calc['d_attr']['star_rating']:.2f}⭐)"
+            f"{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
         ),
         ui.TextDisplay(
-            f"**{play_pp:.2f}pp** / {fc_score_calc['p_attr']['pp']:.2f}pp if FC\n"
+            f"**{grade}**  ·  **{play_pp:,.2f}pp** / "
+            f"{fc_score_calc['p_attr']['pp']:,.2f}pp if FC\n"
             f"🎯 **{play_accuracy}**  ·  "
-            f"🔥 {score.max_combo}x / {map_max_combo}x  ·  "
+            f"🔥 {score.max_combo:,}x / {map_max_combo:,}x  ·  "
             f"❌ {score.miss}x"
         ),
         ui.Separator(),
@@ -147,7 +155,8 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
 
     blocks.append(
         ui.TextDisplay(
-            f"-# {score.great}x300 / {score.ok}x100 / {score.meh}x50 "
+            f"-# {score.great or 0:,}x300 / {score.ok or 0:,}x100 / "
+            f"{score.meh or 0:,}x50 "
             f"(Effective ❌: "
             f"{round(played_score_calc['p_attr']['effective_miss_count'])}x)"
             f"{' - osu! lazer' if score.lazer else ''}"
