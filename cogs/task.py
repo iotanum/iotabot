@@ -1,7 +1,7 @@
 import asyncio
 import logging
-import traceback
 
+import discord
 from discord.ext import commands
 
 from app.models.tracking_channels import TrackingChannels
@@ -23,6 +23,7 @@ class ScoreTracker(commands.Cog):
         self.max_sleep_duration = 5
         self.max_concurrent_lookups = 5
         self.request_semaphore = asyncio.Semaphore(self.max_concurrent_lookups)
+        self._warned_channels: set[int] = set()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -36,9 +37,18 @@ class ScoreTracker(commands.Cog):
         tracking_list = await TrackingChannels.get_all(self.db)
         tracking_map = dict()
         for record in tracking_list:
-            tracking_map.setdefault(record.user_id, []).append(
-                self.bot.get_channel(record.channel_id)
-            )
+            channel = self.bot.get_channel(record.channel_id)
+            if channel is None:
+                # Deleted channel or one the bot can no longer see - a send to it
+                # would take down the whole notification batch
+                if record.channel_id not in self._warned_channels:
+                    self._warned_channels.add(record.channel_id)
+                    logging.warning(
+                        f"Channel '{record.channel_id}' tracking user "
+                        f"'{record.user_id}' not found; skipping it"
+                    )
+                continue
+            tracking_map.setdefault(record.user_id, []).append(channel)
         return tracking_map
 
     async def notify_new_scores(self, user_id: int, channels: list):
@@ -47,13 +57,18 @@ class ScoreTracker(commands.Cog):
         """
         async with self.request_semaphore:
             score = await is_new_score(self.db, user_id)
-            if score:
-                embed = await create_score_embed(self.db, score)
+            if not score:
+                return
+            embed = await create_score_embed(self.db, score)
 
-        if score:
-            for channel in channels:
+        for channel in channels:
+            try:
                 await channel.send(embed=embed)
-                await asyncio.sleep(0.1)  # Avoid hitting rate limits.
+            except discord.HTTPException:
+                # Missing permissions or the like, don't let one channel stop
+                # the score from reaching the remaining ones
+                logging.exception(f"Failed to send score embed to '{channel.id}'")
+            await asyncio.sleep(0.1)  # Avoid hitting rate limits.
 
     async def calculate_sleep_time(self):
         """
@@ -97,9 +112,12 @@ class ScoreTracker(commands.Cog):
                         tg.create_task(self.notify_new_scores(user_id, channels))
                 sleep_time = await self.calculate_sleep_time()
                 await asyncio.sleep(sleep_time)
-            except Exception as e:
-                logging.error(f"Error in tracking loop: {traceback.format_exc()}")
-                pass
+            except Exception:
+                logging.exception("Error in tracking loop")
+                # Back off instead of retrying immediately, a failure that sticks
+                # around would otherwise spin the loop with no delay at all
+                await asyncio.sleep(self.max_sleep_duration)
+
 
 async def setup(bot):
     await bot.add_cog(ScoreTracker(bot))

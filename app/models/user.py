@@ -54,13 +54,22 @@ class User(Base):
         if "id" in model_dict:
             valid_user["user_id"] = model_dict["id"]
 
+        # Nested stats share names with unset top-level fields (e.g. the rank lives in
+        # `statistics.global_rank`, while `global_rank` itself is None on this endpoint),
+        # so `None` is never collected and cannot overwrite a real value.
         for key, value in model_dict.items():
             if isinstance(value, dict):
                 for sub_key, sub_value in value.items():
-                    if sub_key in valid_keys:
+                    if sub_key in valid_keys and sub_value is not None:
                         valid_user[sub_key] = sub_value
-            elif key in valid_keys:
+            elif key in valid_keys and value is not None:
                 valid_user[key] = value
+
+        # Previous usernames come from the API as a list of names
+        if isinstance(valid_user.get("previous_usernames"), list):
+            valid_user["previous_usernames"] = ", ".join(
+                valid_user["previous_usernames"]
+            )
 
         # Add URL field if user_id is available
         if "user_id" in valid_user:
@@ -157,7 +166,6 @@ class User(Base):
         if user:
             new_values = await cls.filter_valid_kwargs(api_user)
             new_values.pop("user_id", None)
-            new_values = {k: v for k, v in new_values.items() if v is not None}
             await db.update(user, new_values)
             logging.info(
                 f"Updated user '{user.username}' with new values: {new_values}."

@@ -7,7 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 from app.models.beatmapset import Beatmapset
 from app.utils import model_to_dict
-from cogs.osu.client import get_beatmap
 
 if TYPE_CHECKING:
     from app.models.beatmapset import Beatmapset
@@ -38,7 +37,7 @@ class Beatmap(Base):
     url: Mapped[str] = mapped_column()
 
     @classmethod
-    async def filter_valid_kwargs(cls, db, score) -> dict:
+    async def filter_valid_kwargs(cls, score) -> dict:
         """
         Filters and maps valid attributes from a Score instance to the Beatmap model.
         """
@@ -52,8 +51,12 @@ class Beatmap(Base):
             )
         beatmap_dict = await model_to_dict(beatmap_data)
 
+        # `None` is never collected, so an update can only ever replace a stored
+        # value with a real one
         valid_beatmap = {}
         for key, value in beatmap_dict.items():
+            if value is None:
+                continue
             if key == "id":  # Map external `id` to `beatmap_id`
                 valid_beatmap["beatmap_id"] = value
             elif key in {"beatmapset_id"} or key in valid_keys:
@@ -61,12 +64,9 @@ class Beatmap(Base):
 
         # Remove unwanted keys and add additional fields
         valid_beatmap.pop("beatmapset", None)  # Remove `beatmapset` if present
-        valid_beatmap["cover_url"] = getattr(score.beatmapset.covers, "list_2x", None)
-
-        # Fetch additional data (e.g., max combo) using external API
-        beatmap = await get_beatmap(score.beatmap.id)
-        if beatmap:
-            valid_beatmap["max_combo"] = getattr(beatmap, "max_combo", None)
+        cover_url = getattr(score.beatmapset.covers, "list_2x", None)
+        if cover_url:
+            valid_beatmap["cover_url"] = cover_url
 
         return valid_beatmap
 
@@ -96,7 +96,7 @@ class Beatmap(Base):
         await Beatmapset.add(db, score.beatmapset)
 
         # Filter valid attributes and create a new Beatmap entry
-        valid_beatmap = await cls.filter_valid_kwargs(db, score)
+        valid_beatmap = await cls.filter_valid_kwargs(score)
         new_beatmap = cls(**valid_beatmap)
         await db.add(new_beatmap)
         logging.info(
@@ -108,19 +108,19 @@ class Beatmap(Base):
     async def update(cls, db, score) -> None:
         """
         Updates an existing beatmap entry in the database.
-        """
 
-        new_values = {
-            "status": score.beatmap.status,
-            "accuracy": score.beatmap.accuracy,
-            "ar": score.beatmap.ar,
-            "cs": score.beatmap.cs,
-            "drain": score.beatmap.drain,
-            "url": score.beatmap.url,
-        }
+        Maps get reworked and re-ranked, so every field is refreshed and not just
+        the status - otherwise values like bpm or difficulty stay at whatever
+        they were when the beatmap was first cached.
+        """
 
         beatmap = await cls.get(db, score.beatmap.id)
         if beatmap:
+            new_values = await cls.filter_valid_kwargs(score)
+            # Never rewrite the identity: a beatmap doesn't move to another set,
+            # and the beatmapset row is only guaranteed to exist on the add path
+            new_values.pop("beatmap_id", None)
+            new_values.pop("beatmapset_id", None)
             await db.update(beatmap, new_values)
             logging.info(
                 f"Updated beatmap '{score.beatmap.id}' with new values: {new_values}."

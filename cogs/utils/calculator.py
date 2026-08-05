@@ -17,7 +17,7 @@ async def calculate_scores(score: Scores) -> dict:
     # Build request body with conditionally included fields
     req_body = {
         "beatmap_id": str(score.beatmap_id),
-        "accuracy": f"{100 * score.accuracy:.2f}",
+        "accuracy": f"{100 * (score.accuracy or 0):.2f}",
         "combo": str(score.max_combo),
         **({"goods": str(score.ok)} if score.ok else {}),
         **({"mehs": str(score.meh)} if score.meh else {}),
@@ -44,7 +44,7 @@ async def calculate_scores(score: Scores) -> dict:
             raise e
 
 
-async def calculate_bpm(mods: list[str], bpm: float) -> float:
+async def calculate_bpm(mods: list[str] | None, bpm: float) -> float:
     """
     Adjusts the BPM based on the mods applied.
     """

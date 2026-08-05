@@ -74,7 +74,7 @@ class Scores(Base):
         if score.beatmap:
             # Add beatmap to the database if it doesn't exist from the score
             await Beatmap.add(db, score)
-            # Add the max_combo to the valid_score from added beatmap
+            # Link the score to the stored beatmap
             valid_score["beatmap_id"] = getattr(score.beatmap, "id", None)
 
             # Remove the beatmap key from the dictionary
