@@ -121,6 +121,19 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     global_rank = f"#{user.global_rank:,}" if user.global_rank is not None else "#N/A"
     user_pp = f"{user.pp:,.0f}pp" if user.pp is not None else "N/A"
 
+    # Components v2 has no horizontal layout for text - Section only takes a
+    # single accessory and ActionRow only takes buttons - so a fenced block is
+    # the only way to get columns. Fixed decimals keep them aligned.
+    stat_rows = zip(
+        (
+            f"AR {beatmap.ar:>5.2f}  OD {beatmap.accuracy:>5.2f}",
+            f"HP {beatmap.drain:>5.2f}  CS {beatmap.cs:>5.2f}",
+            f"BPM {int(bpm):>4}",
+        ),
+        (f" SS  {pp_ss}", f"95%  {pp_95}", f"90%  {pp_90}"),
+    )
+    stat_table = "\n".join(f" {left:<18} {right}" for left, right in stat_rows)
+
     blocks: list[ui.Item] = [
         # The beatmapset banner, full width across the top of the card
         ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
@@ -138,12 +151,7 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         ),
         ui.Separator(),
         ui.TextDisplay(
-            f"`BPM: {int(bpm)} "
-            f"AR: {beatmap.ar:.2f} "
-            f"OD: {beatmap.accuracy:.2f} "
-            f"HP: {beatmap.drain:.2g} "
-            f"CS: {beatmap.cs:.2g}`\n"
-            f"`SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}`"
+            f"```\n{stat_table}\n```"
         ),
     ]
 
