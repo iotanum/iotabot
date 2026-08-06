@@ -124,17 +124,9 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     blocks: list[ui.Item] = [
         # The beatmapset banner, full width across the top of the card
         ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
-        # A Section is the only way to put an image beside text - the avatar
-        # gives the player line its own visual anchor instead of it reading as
-        # a caption under the banner
-        ui.Section(
-            ui.TextDisplay(
-                f"## [{user.username}]({user.url})\n"
-                f"-# {global_rank}  ·  {user_pp}"
-            ),
-            accessory=ui.Thumbnail(user.avatar_url),
-        ),
         ui.TextDisplay(
+            f"## [{user.username}]({user.url})\n"
+            f"-# {global_rank}  ·  {user_pp}\n"
             f"### [{beatmapset.artist} - {beatmapset.title}]({beatmap.url})\n"
             f"{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
         ),

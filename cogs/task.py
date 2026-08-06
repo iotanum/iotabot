@@ -108,19 +108,18 @@ class ScoreTracker(commands.Cog):
         # A burst of plays moves the count by more than one - fetch enough
         # to cover the gap. max(1, ...) also covers play_count decreases
         last_count = self._play_counts.get(user_id)
-        # Observation only: how far the gate saw play_count move, before the
-        # catch-up cap clamps it. `None` means the user was checked blind
         delta = (
             observed_play_count - last_count
             if observed_play_count is not None and last_count is not None
             else None
         )
-        if observed_play_count is None or last_count is None:
+        if delta is None:
             fetch_limit = 1
         else:
-            fetch_limit = max(
-                1, min(observed_play_count - last_count, self.max_scores_per_check)
-            )
+            # One past the count: `play_count` moves before the score reaches
+            # `/recent`, so the play that fired the gate is often still
+            # unpublished and only shows up alongside the next one
+            fetch_limit = max(1, min(delta + 1, self.max_scores_per_check))
 
         queued_at = time.monotonic()
         async with self.request_semaphore:
