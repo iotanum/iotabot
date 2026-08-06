@@ -131,14 +131,21 @@ class ScoreTracker(commands.Cog):
             )
             fetch_s = time.monotonic() - fetch_start
 
-        # Commit the play count only once the play it counted turned up -
-        # `play_count` moves a moment before the score reaches `/recent`,
-        # so on an empty result the old count stays put and the user is
-        # re-checked next cycle instead of the play stranding until their
-        # next one. Non-positive deltas are stat recalculations, not plays.
-        accounted = bool(new_scores) or delta is None or delta <= 0
-        if check_completed and observed_play_count is not None and accounted:
-            self._play_counts[user_id] = observed_play_count
+        if check_completed and observed_play_count is not None:
+            if delta is None or delta <= 0:
+                # First sighting, or a stat recalculation - nothing to wait for
+                self._play_counts[user_id] = observed_play_count
+            else:
+                # Advance the count only over plays that actually turned up -
+                # `play_count` moves a moment before `/recent` publishes, and
+                # committing past an unpublished play strands it until the
+                # user's next play (measured: one-behind detection chains
+                # under retry-spam). The shortfall keeps the user re-checked
+                # every cycle until the play appears. Plays beyond the fetch
+                # cap are dropped deliberately and do not hold the count back.
+                expected = min(delta, self.max_scores_per_check)
+                shortfall = max(expected - len(new_scores), 0)
+                self._play_counts[user_id] = observed_play_count - shortfall
 
         # Everything is stored, only passes are posted - handed to the posting
         # worker so this task (and with it the tracking cycle) stays fast
