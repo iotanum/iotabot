@@ -143,11 +143,13 @@ class Scores(Base):
 
     @classmethod
     async def clean_old_scores(cls, db, user_id: int):
-        # Subquery to get the last 5 "passed" scores
+        # Subquery to get the last 5 "passed" scores. Ordered by when the score
+        # was played, not by row id - a score that reached the API late is
+        # stored after newer ones and would otherwise evict them
         passed_sub_stmt = (
             select(Scores.id)
             .where(Scores.user_id == user_id, Scores.passed.is_(True))
-            .order_by(Scores.id.desc())
+            .order_by(Scores.score_ended_at.desc())
             .limit(5)
         )
         passed_result_sub_stmt = await db.scalars(passed_sub_stmt)
@@ -156,7 +158,7 @@ class Scores(Base):
         not_passed_sub_stmt = (
             select(Scores.id)
             .where(Scores.user_id == user_id, Scores.passed.is_(False))
-            .order_by(Scores.id.desc())
+            .order_by(Scores.score_ended_at.desc())
             .limit(5)
         )
         not_passed_result_sub_stmt = await db.scalars(not_passed_sub_stmt)

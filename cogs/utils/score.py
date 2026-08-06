@@ -36,11 +36,11 @@ async def is_new_score(
 ) -> tuple[bool, list[Scores]]:
     """
     Checks if new scores are available for the user and adds the ones not
-    already in the database. Returns `(check_completed, scores_to_post)`:
+    already in the database. Returns `(check_completed, new_scores)`:
     `check_completed` is False only when the score fetch failed, telling
     the caller to re-check the user instead of advancing its play-count
-    bookkeeping; `scores_to_post` holds the newly stored passes, oldest
-    first.
+    bookkeeping; `new_scores` holds everything just stored, fails included,
+    oldest first.
     """
     recent_scores = await get_recent_user_scores(
         user_id, include_fails=True, limit=limit
@@ -52,9 +52,8 @@ async def is_new_score(
         # Fetch fine, the user has nothing in the API's recent window
         return True, []
 
-    to_post = []
-    # Oldest first, so stored row ids stay chronological - clean_old_scores
-    # keeps the newest rows per category by id
+    new_scores = []
+    # Oldest first, so a burst of scores is posted in the order it was played
     for new_score in reversed(recent_scores):
         db_score = await Scores.get(
             db_sess, user_id, new_score.beatmap.id, new_score.ended_at
@@ -71,12 +70,9 @@ async def is_new_score(
             f"at '{new_score.ended_at}' [lag] detect_age={detect_age:.1f}s "
             f"passed={new_score.passed}"
         )
-        # save all scores, send only passed ones
-        score = await add_score(db_sess, new_score)
-        if score.passed:
-            to_post.append(score)
+        new_scores.append(await add_score(db_sess, new_score))
 
     # With the play-count gate, adds are the common case, so retention runs
     # on every completed check that found scores in the window
     await Scores.clean_old_scores(db_sess, user_id)
-    return True, to_post
+    return True, new_scores

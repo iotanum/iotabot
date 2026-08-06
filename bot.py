@@ -44,7 +44,9 @@ class Bot(commands.Bot):
 
         self.start_time = discord.utils.utcnow()
         task_cog = self.get_cog("ScoreTracker")
-        self.loop.create_task(task_cog.run_tracking_loop())
+        # Reference kept - a task with no reference can be garbage collected
+        # mid-run, silently stopping score tracking
+        self.tracking_task = self.loop.create_task(task_cog.run_tracking_loop())
 
 
 async def on_tree_error(

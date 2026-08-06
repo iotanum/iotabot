@@ -35,6 +35,10 @@ class ScoreTracker(commands.Cog):
         self.max_scores_per_check = 5
         self._warned_channels: set[int] = set()
         self._play_counts: dict[int, int] = {}
+        # Passes waiting to be built and sent. Posting a score takes ~10s in
+        # the pp calculator, so it runs in its own task - the tracking loop
+        # would otherwise go blind to everyone else's plays for that long
+        self._post_queue: asyncio.Queue = asyncio.Queue()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -116,65 +120,90 @@ class ScoreTracker(commands.Cog):
         if delta is None:
             fetch_limit = 1
         else:
-            # One past the count: `play_count` moves before the score reaches
-            # `/recent`, so the play that fired the gate is often still
-            # unpublished and only shows up alongside the next one
-            fetch_limit = max(1, min(delta + 1, self.max_scores_per_check))
+            fetch_limit = max(1, min(delta, self.max_scores_per_check))
 
         queued_at = time.monotonic()
         async with self.request_semaphore:
-            # Time spent queued behind other users' calculator calls - the
-            # semaphore is held across the whole build below, so this is where
-            # a busy cycle shows up as post lag
             sem_wait = time.monotonic() - queued_at
             fetch_start = time.monotonic()
-            check_completed, scores = await is_new_score(
+            check_completed, new_scores = await is_new_score(
                 self.db, user_id, limit=fetch_limit
             )
             fetch_s = time.monotonic() - fetch_start
-            # Commit the play count only once the check actually ran - after
-            # a failed fetch (or a cancelled task) the old count stays put,
-            # so the user is re-checked next cycle instead of losing the play
-            if check_completed and observed_play_count is not None:
-                self._play_counts[user_id] = observed_play_count
-            if not scores:
-                return
-            build_start = time.monotonic()
-            views = [await create_score_view(self.db, score) for score in scores]
-            build_s = time.monotonic() - build_start
 
-        send_start = time.monotonic()
-        for channel in channels:
-            for view in views:
-                try:
-                    await channel.send(view=view)
-                except discord.HTTPException:
-                    # Missing permissions or the like, don't let one channel stop
-                    # the score from reaching the remaining ones
-                    logging.exception(f"Failed to send score embed to '{channel.id}'")
-            await asyncio.sleep(0.1)  # Avoid hitting rate limits.
-        send_s = time.monotonic() - send_start
+        # Commit the play count only once the play it counted turned up -
+        # `play_count` moves a moment before the score reaches `/recent`,
+        # so on an empty result the old count stays put and the user is
+        # re-checked next cycle instead of the play stranding until their
+        # next one. Non-positive deltas are stat recalculations, not plays.
+        accounted = bool(new_scores) or delta is None or delta <= 0
+        if check_completed and observed_play_count is not None and accounted:
+            self._play_counts[user_id] = observed_play_count
 
-        # `score_ended_at` is naive UTC, same as everything else in the db
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-        ages = [
-            f"{(now - s.score_ended_at).total_seconds():.1f}"
-            for s in scores
-            if s.score_ended_at is not None
-        ]
+        # Everything is stored, only passes are posted - handed to the posting
+        # worker so this task (and with it the tracking cycle) stays fast
+        scores = [score for score in new_scores if score.passed]
+        if not scores:
+            return
         logging.info(
-            f"[lag] posted user={user_id} delta={delta} limit={fetch_limit} "
-            f"sem_wait={sem_wait:.1f}s fetch={fetch_s:.1f}s build={build_s:.1f}s "
-            f"send={send_s:.1f}s n={len(views)} age={','.join(ages) or 'n/a'}s"
+            f"[lag] queued user={user_id} delta={delta} limit={fetch_limit} "
+            f"sem_wait={sem_wait:.1f}s fetch={fetch_s:.1f}s n={len(scores)}"
         )
+        for score in scores:
+            self._post_queue.put_nowait((score, channels))
+
+    async def post_scores(self):
+        """
+        Builds and sends queued score posts, one at a time, in the order the
+        plays happened. Runs as its own task so the ~10s calculator round trip
+        per pass never stops the tracking loop from sampling play counts.
+        """
+        while not self.bot.is_closed():
+            score, channels = await self._post_queue.get()
+            try:
+                build_start = time.monotonic()
+                view = await create_score_view(self.db, score)
+                build_s = time.monotonic() - build_start
+
+                send_start = time.monotonic()
+                for channel in channels:
+                    try:
+                        await channel.send(view=view)
+                    except discord.HTTPException:
+                        # Missing permissions or the like, don't let one channel
+                        # stop the score from reaching the remaining ones
+                        logging.exception(
+                            f"Failed to send score embed to '{channel.id}'"
+                        )
+                    await asyncio.sleep(0.1)  # Avoid hitting rate limits.
+                send_s = time.monotonic() - send_start
+
+                # `score_ended_at` is naive UTC, same as everything in the db
+                now = datetime.now(timezone.utc).replace(tzinfo=None)
+                age = (
+                    f"{(now - score.score_ended_at).total_seconds():.1f}"
+                    if score.score_ended_at is not None
+                    else "n/a"
+                )
+                logging.info(
+                    f"[lag] posted user={score.user_id} build={build_s:.1f}s "
+                    f"send={send_s:.1f}s age={age}s"
+                )
+            except Exception:
+                # The score is already stored; losing one post must not take
+                # down the posting worker for everyone after it
+                logging.exception(f"Failed to post score '{score.id}'")
 
     async def calculate_sleep_time(self):
         """
         Calculates the appropriate sleep duration to respect API rate limits.
         """
-        calls_made = RequestCounter.requests_per_last_minute()
-        time_elapsed = RequestCounter.seconds_elapsed_in_window()
-        rate_per_second = calls_made / time_elapsed
+        # Rolling 60s window. The fixed minute-window counter resets its clock
+        # every 60s, and dividing by the freshly-reset elapsed time made the
+        # first cycle after a reset look like a burst, clamping sleep to max
+        # exactly when the loop was idle
+        calls_made = RequestCounter.requests_per_minute()
+        rate_per_second = calls_made / 60
         max_rate = self.max_api_calls_per_minute / 60
         overshoot = (rate_per_second - max_rate) * 1.5  # Scale it up a bit to be safe.
 
@@ -186,6 +215,9 @@ class ScoreTracker(commands.Cog):
         Main background task that checks for new scores and respects API rate limits.
         """
         await self.bot.wait_until_ready()
+        # Reference kept on self - a task with no reference can be garbage
+        # collected mid-run
+        self._post_worker = asyncio.create_task(self.post_scores())
 
         last_cycle_start = None
         while not self.bot.is_closed():
@@ -220,7 +252,7 @@ class ScoreTracker(commands.Cog):
                         f"[lag] cycle since_last={since_last:.1f}s "
                         f"gate={gate_s:.1f}s moved={len(played_users)} "
                         f"work={work_s:.1f}s sleep={sleep_time:.1f}s "
-                        f"calls={RequestCounter.requests_per_last_minute()}/min"
+                        f"calls={RequestCounter.requests_per_minute()}/min"
                     )
                 await asyncio.sleep(sleep_time)
             except Exception:
