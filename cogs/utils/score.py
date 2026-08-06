@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 
 from ossapi import Score
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,8 +61,15 @@ async def is_new_score(
         )
         if db_score:
             continue
+        # Age at detection: how long the play sat between finishing and this
+        # fetch returning it. It splits osu!'s own propagation from our loop
+        detect_age = (
+            datetime.now(timezone.utc) - new_score.ended_at
+        ).total_seconds()
         logging.info(
-            f"New score found for user_id '{user_id}' - '{new_score.beatmap.id}', at '{new_score.ended_at}'"
+            f"New score found for user_id '{user_id}' - '{new_score.beatmap.id}', "
+            f"at '{new_score.ended_at}' [lag] detect_age={detect_age:.1f}s "
+            f"passed={new_score.passed}"
         )
         # save all scores, send only passed ones
         score = await add_score(db_sess, new_score)

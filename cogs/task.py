@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import time
+from datetime import datetime, timezone
 
 import discord
 from discord.ext import commands
@@ -106,6 +108,13 @@ class ScoreTracker(commands.Cog):
         # A burst of plays moves the count by more than one - fetch enough
         # to cover the gap. max(1, ...) also covers play_count decreases
         last_count = self._play_counts.get(user_id)
+        # Observation only: how far the gate saw play_count move, before the
+        # catch-up cap clamps it. `None` means the user was checked blind
+        delta = (
+            observed_play_count - last_count
+            if observed_play_count is not None and last_count is not None
+            else None
+        )
         if observed_play_count is None or last_count is None:
             fetch_limit = 1
         else:
@@ -113,10 +122,17 @@ class ScoreTracker(commands.Cog):
                 1, min(observed_play_count - last_count, self.max_scores_per_check)
             )
 
+        queued_at = time.monotonic()
         async with self.request_semaphore:
+            # Time spent queued behind other users' calculator calls - the
+            # semaphore is held across the whole build below, so this is where
+            # a busy cycle shows up as post lag
+            sem_wait = time.monotonic() - queued_at
+            fetch_start = time.monotonic()
             check_completed, scores = await is_new_score(
                 self.db, user_id, limit=fetch_limit
             )
+            fetch_s = time.monotonic() - fetch_start
             # Commit the play count only once the check actually ran - after
             # a failed fetch (or a cancelled task) the old count stays put,
             # so the user is re-checked next cycle instead of losing the play
@@ -124,8 +140,11 @@ class ScoreTracker(commands.Cog):
                 self._play_counts[user_id] = observed_play_count
             if not scores:
                 return
+            build_start = time.monotonic()
             views = [await create_score_view(self.db, score) for score in scores]
+            build_s = time.monotonic() - build_start
 
+        send_start = time.monotonic()
         for channel in channels:
             for view in views:
                 try:
@@ -135,6 +154,20 @@ class ScoreTracker(commands.Cog):
                     # the score from reaching the remaining ones
                     logging.exception(f"Failed to send score embed to '{channel.id}'")
             await asyncio.sleep(0.1)  # Avoid hitting rate limits.
+        send_s = time.monotonic() - send_start
+
+        # `score_ended_at` is naive UTC, same as everything else in the db
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        ages = [
+            f"{(now - s.score_ended_at).total_seconds():.1f}"
+            for s in scores
+            if s.score_ended_at is not None
+        ]
+        logging.info(
+            f"[lag] posted user={user_id} delta={delta} limit={fetch_limit} "
+            f"sem_wait={sem_wait:.1f}s fetch={fetch_s:.1f}s build={build_s:.1f}s "
+            f"send={send_s:.1f}s n={len(views)} age={','.join(ages) or 'n/a'}s"
+        )
 
     async def calculate_sleep_time(self):
         """
@@ -155,11 +188,23 @@ class ScoreTracker(commands.Cog):
         """
         await self.bot.wait_until_ready()
 
+        last_cycle_start = None
         while not self.bot.is_closed():
             try:
-                tracking_map = await self.get_tracking_channels()
-                played_users = await self.get_played_users(list(tracking_map))
+                cycle_start = time.monotonic()
+                # Gap between gate samples - it bounds how stale a detection can
+                # be, so it is the first number to look at when posts lag
+                since_last = (
+                    cycle_start - last_cycle_start if last_cycle_start else 0.0
+                )
+                last_cycle_start = cycle_start
 
+                tracking_map = await self.get_tracking_channels()
+                gate_start = time.monotonic()
+                played_users = await self.get_played_users(list(tracking_map))
+                gate_s = time.monotonic() - gate_start
+
+                work_start = time.monotonic()
                 async with asyncio.TaskGroup() as tg:
                     for user_id, observed_count in played_users.items():
                         tg.create_task(
@@ -167,7 +212,17 @@ class ScoreTracker(commands.Cog):
                                 user_id, tracking_map[user_id], observed_count
                             )
                         )
+                work_s = time.monotonic() - work_start
                 sleep_time = await self.calculate_sleep_time()
+                # Idle cycles run every couple of seconds, so logging them all
+                # would drown the log - keep the ones that did work or stalled
+                if played_users or since_last > self.max_sleep_duration + 5:
+                    logging.info(
+                        f"[lag] cycle since_last={since_last:.1f}s "
+                        f"gate={gate_s:.1f}s moved={len(played_users)} "
+                        f"work={work_s:.1f}s sleep={sleep_time:.1f}s "
+                        f"calls={RequestCounter.requests_per_last_minute()}/min"
+                    )
                 await asyncio.sleep(sleep_time)
             except Exception:
                 logging.exception("Error in tracking loop")
