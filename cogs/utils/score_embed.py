@@ -135,9 +135,9 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         # Markdown headings are line-scoped, so everything sharing the username
         # line renders at heading size - there is no way to mix sizes inline
         ui.TextDisplay(
-            f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}\n"
-            f"### [{beatmapset.artist} - {beatmapset.title}]({beatmap.url})\n"
-            f"{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
+            f"# [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}\n"
+            f"## [{beatmapset.artist} - {beatmapset.title}]({beatmap.url})\n"
+            f"###{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
         ),
         ui.TextDisplay(
             f"**{grade}**  ·  **{play_pp:,.2f}pp** / "
