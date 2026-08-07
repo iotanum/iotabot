@@ -23,10 +23,15 @@ class ScoreTracker(commands.Cog):
         self.db = bot.db_session
         # osu! enforces 1200 requests/minute, but the API terms ask you to stay
         # under 60 and get in touch before going past it. One batch play count
-        # lookup per cycle means a 2s floor keeps the idle loop at ~30/minute,
-        # leaving the rest of the budget for actual score lookups.
+        # lookup per cycle, so the floor sets the idle rate: measured 24/min at
+        # a 2s floor, ~33 at 1s, peaking near 50 during retry bursts when hot
+        # users are re-fetched every cycle. `calculate_sleep_time` stretches the
+        # sleep back out on its own if the rate approaches the cap.
+        # The floor only shortens the wait for the next poll - roughly half a
+        # cycle, so ~0.5s off detection. The gate call and score fetch are paid
+        # per cycle regardless and do not shrink.
         self.max_api_calls_per_minute = 60
-        self.min_sleep_duration = 2
+        self.min_sleep_duration = 1
         self.max_sleep_duration = 5
         self.max_concurrent_lookups = 5
         self.request_semaphore = asyncio.Semaphore(self.max_concurrent_lookups)

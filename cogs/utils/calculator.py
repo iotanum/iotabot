@@ -46,7 +46,16 @@ async def calculate_scores(score: Scores, checksum: str | None = None) -> dict:
             ) as response:
                 response.raise_for_status()  # Raise an exception for HTTP errors
                 resp_json = await response.json()
-                logging.info(f"Calc response: {resp_json}")
+                # Just the pp values - the full response is every attribute of
+                # five simulations, about 8KB a line
+                logging.info(
+                    f"Calc for beatmap '{score.beatmap_id}': "
+                    + " ".join(
+                        f"{key}={resp_json[key]['p_attr']['pp']:.2f}"
+                        for key in ("score", "if_fc", "100", "95", "90")
+                        if key in resp_json
+                    )
+                )
                 return resp_json
         except aiohttp.ClientError as e:
             logging.error(f"Error while calculating scores (ClientError): {e}")
