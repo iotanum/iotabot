@@ -147,16 +147,20 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
             f"❌ {score.miss}x"
         ),
         ui.Separator(),
-        # One heading holding both spans, rather than one per line. A heading is
-        # a block with margins of its own, so two of them are pushed apart by a
-        # gap no newline can close - this wraps instead, at ordinary line height
+        # A code block rather than code spans. Two `###` lines carry a heading
+        # margin between them, and putting both spans on one heading traded that
+        # gap for a wrap through the middle of a number - headings fit fewer
+        # characters per line. A block is one box, two lines, no margin, and at
+        # ordinary size both lines fit without wrapping
         ui.TextDisplay(
-            f"### `BPM: {int(bpm)} "
+            "```\n"
+            f"BPM: {int(bpm)} "
             f"AR: {beatmap.ar:.2f} "
             f"OD: {beatmap.accuracy:.2f} "
             f"HP: {beatmap.drain:.2g} "
-            f"CS: {beatmap.cs:.2g}` "
-            f"`SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}`"
+            f"CS: {beatmap.cs:.2g}\n"
+            f"SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}\n"
+            "```"
         ),
     ]
 
