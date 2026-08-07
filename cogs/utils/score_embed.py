@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional
 
 import discord
@@ -77,7 +78,18 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
 
     # Process mods, scores, and BPM
     mods = await fix_mods(score)
-    scores = await calculate_scores(score, checksum=beatmap.checksum)
+    # Started here and awaited below. The stat lookups in between take a few
+    # seconds of their own and do not read the calculator's result, so they run
+    # alongside it instead of after it
+    calculation = asyncio.create_task(
+        calculate_scores(score, checksum=beatmap.checksum)
+    )
+
+    # Display changes or achievements
+    changes = await is_user_stat_change(db, score)
+    new_highscore = await is_new_highscore(score) if changes else None
+
+    scores = await calculation
     bpm = await calculate_bpm(score.mods_list, beatmap.bpm or 0.0)
 
     # Extract and calculate play statistics
@@ -101,10 +113,6 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     accent_color = status_colors.get(beatmap.status, 0x000000)
 
     map_max_combo = played_score_calc["d_attr"]["max_combo"]
-
-    # Display changes or achievements
-    changes = await is_user_stat_change(db, score)
-    new_highscore = await is_new_highscore(score) if changes else None
 
     # Read after the stat refresh above so the numbers are the ones from after
     # this play
