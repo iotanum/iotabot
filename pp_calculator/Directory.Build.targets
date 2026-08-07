@@ -1,0 +1,15 @@
+<Project>
+
+  <PropertyGroup>
+    <LiveOsuRulesetVersion Condition="'$(LiveOsuRulesetVersion)' == ''">2026.730.0</LiveOsuRulesetVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Update="ppy.osu.Game" Version="$(LiveOsuRulesetVersion)" />
+    <PackageReference Update="ppy.osu.Game.Rulesets.Osu" Version="$(LiveOsuRulesetVersion)" />
+    <PackageReference Update="ppy.osu.Game.Rulesets.Taiko" Version="$(LiveOsuRulesetVersion)" />
+    <PackageReference Update="ppy.osu.Game.Rulesets.Catch" Version="$(LiveOsuRulesetVersion)" />
+    <PackageReference Update="ppy.osu.Game.Rulesets.Mania" Version="$(LiveOsuRulesetVersion)" />
+  </ItemGroup>
+
+</Project>

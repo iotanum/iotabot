@@ -1,0 +1,23 @@
+<!-- The server is its own project rather than a file dropped into osu-tools, so
+     the checkout stays exactly as cloned and moving the pinned revision cannot
+     conflict with anything here.
+
+     The Web SDK brings in Microsoft.AspNetCore.App, and this assembly has only
+     one entry point, so neither of those needs patching into an upstream csproj. -->
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>IotaBot.PpCalculator</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The command, its parser and its output format, from the tool itself. The
+         ruleset package versions come from ../Directory.Build.targets, which
+         applies to this project too. -->
+    <ProjectReference Include="../osu-tools/PerformanceCalculator/PerformanceCalculator.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -33,7 +33,11 @@ services:
       - "8091:8080"
     container_name: pp_calc
     restart: always
+    volumes:
+      # dont redl beatmaps for calcs every deployment/docker rr
+      - 'beatmap_cache:/var/cache/osu-beatmaps'
 
 
 volumes:
   db_data:
+  beatmap_cache:
