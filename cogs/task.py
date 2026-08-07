@@ -22,16 +22,20 @@ class ScoreTracker(commands.Cog):
         self.bot = bot
         self.db = bot.db_session
         # osu! enforces 1200 requests/minute, but the API terms ask you to stay
-        # under 60 and get in touch before going past it. One batch play count
-        # lookup per cycle, so the floor sets the idle rate: measured 24/min at
-        # a 2s floor, ~33 at 1s, peaking near 50 during retry bursts when hot
-        # users are re-fetched every cycle. `calculate_sleep_time` stretches the
-        # sleep back out on its own if the rate approaches the cap.
-        # The floor only shortens the wait for the next poll - roughly half a
-        # cycle, so ~0.5s off detection. The gate call and score fetch are paid
-        # per cycle regardless and do not shrink.
-        self.max_api_calls_per_minute = 60
-        self.min_sleep_duration = 1
+        # under 60 and get in touch before going past it.
+        # The wait used to be derived from the running call rate, from when the
+        # loop fetched per tracked user and 21 calls a cycle made any fixed wait
+        # unsafe. The batch play count lookup replaced those with one call, so a
+        # cycle is now that plus a fetch for each user that played - about 1.3
+        # calls, measured 33-36/min. A constant is enough for that, and the
+        # cycle cannot run away on its own: the two calls take 1.3s between
+        # them, so even waiting not at all would only reach ~58/min.
+        # Waiting is not where detection latency goes - the wait is half a cycle
+        # on average, against a gate call and fetch that are paid in full every
+        # time.
+        self.sleep_duration = 1.1
+        # Backoff after the loop throws, and the gap that counts as a stall
+        # worth logging
         self.max_sleep_duration = 5
         self.max_concurrent_lookups = 5
         self.request_semaphore = asyncio.Semaphore(self.max_concurrent_lookups)
@@ -206,22 +210,6 @@ class ScoreTracker(commands.Cog):
                 # down the posting worker for everyone after it
                 logging.exception(f"Failed to post score '{score.id}'")
 
-    async def calculate_sleep_time(self):
-        """
-        Calculates the appropriate sleep duration to respect API rate limits.
-        """
-        # Rolling 60s window. The fixed minute-window counter resets its clock
-        # every 60s, and dividing by the freshly-reset elapsed time made the
-        # first cycle after a reset look like a burst, clamping sleep to max
-        # exactly when the loop was idle
-        calls_made = RequestCounter.requests_per_minute()
-        rate_per_second = calls_made / 60
-        max_rate = self.max_api_calls_per_minute / 60
-        overshoot = (rate_per_second - max_rate) * 1.5  # Scale it up a bit to be safe.
-
-        sleep_time = self.min_sleep_duration + max(overshoot, 0)
-        return min(sleep_time, self.max_sleep_duration)
-
     async def run_tracking_loop(self):
         """
         Main background task that checks for new scores and respects API rate limits.
@@ -256,17 +244,16 @@ class ScoreTracker(commands.Cog):
                             )
                         )
                 work_s = time.monotonic() - work_start
-                sleep_time = await self.calculate_sleep_time()
                 # Idle cycles run every couple of seconds, so logging them all
                 # would drown the log - keep the ones that did work or stalled
                 if played_users or since_last > self.max_sleep_duration + 5:
                     logging.info(
                         f"[lag] cycle since_last={since_last:.1f}s "
                         f"gate={gate_s:.1f}s moved={len(played_users)} "
-                        f"work={work_s:.1f}s sleep={sleep_time:.1f}s "
+                        f"work={work_s:.1f}s sleep={self.sleep_duration:.1f}s "
                         f"calls={RequestCounter.requests_per_minute()}/min"
                     )
-                await asyncio.sleep(sleep_time)
+                await asyncio.sleep(self.sleep_duration)
             except Exception:
                 logging.exception("Error in tracking loop")
                 # Back off instead of retrying immediately, a failure that sticks

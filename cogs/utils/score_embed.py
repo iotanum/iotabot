@@ -147,16 +147,16 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
             f"❌ {score.miss}x"
         ),
         ui.Separator(),
-        # Headings are line-scoped, so each `###` sets the size of its own line
-        # and the code spans come up with it - same monospace, read from further
-        # away
+        # One heading holding both spans, rather than one per line. A heading is
+        # a block with margins of its own, so two of them are pushed apart by a
+        # gap no newline can close - this wraps instead, at ordinary line height
         ui.TextDisplay(
             f"### `BPM: {int(bpm)} "
             f"AR: {beatmap.ar:.2f} "
             f"OD: {beatmap.accuracy:.2f} "
             f"HP: {beatmap.drain:.2g} "
-            f"CS: {beatmap.cs:.2g}`\n"
-            f"### `SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}`"
+            f"CS: {beatmap.cs:.2g}` "
+            f"`SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}`"
         ),
     ]
 
