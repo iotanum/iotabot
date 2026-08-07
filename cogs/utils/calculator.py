@@ -17,9 +17,13 @@ CALC_URL = f"http://{CALC_HOST}:{CALC_PORT}/calculate"
 _calc_semaphore = asyncio.Semaphore(2)
 
 
-async def calculate_scores(score: Scores) -> dict:
+async def calculate_scores(score: Scores, checksum: str | None = None) -> dict:
     """
     Sends a POST request to calculate scores based on the provided score details.
+
+    `checksum` is the beatmap's md5. The calculator reuses results between plays
+    of the same map, and revalidates its own copy of the .osu file, so without
+    one it recomputes everything from scratch rather than risk a stale answer.
     """
     # Build request body with conditionally included fields
     req_body = {
@@ -30,6 +34,7 @@ async def calculate_scores(score: Scores) -> dict:
         **({"mehs": str(score.meh)} if score.meh else {}),
         **({"misses": str(score.miss)} if score.miss else {}),
         **({"mod": score.mods_list} if score.mods_list else {}),
+        **({"checksum": checksum} if checksum else {}),
     }
 
     headers = {"Content-Type": "application/json"}

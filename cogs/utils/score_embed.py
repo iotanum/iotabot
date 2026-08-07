@@ -77,7 +77,7 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
 
     # Process mods, scores, and BPM
     mods = await fix_mods(score)
-    scores = await calculate_scores(score)
+    scores = await calculate_scores(score, checksum=beatmap.checksum)
     bpm = await calculate_bpm(score.mods_list, beatmap.bpm or 0.0)
 
     # Extract and calculate play statistics

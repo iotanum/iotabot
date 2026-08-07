@@ -35,6 +35,9 @@ class Beatmap(Base):
     cover_url: Mapped[str] = mapped_column()
     status: Mapped[Optional[str]] = mapped_column()
     url: Mapped[str] = mapped_column()
+    # md5 of the .osu file. Reworked maps keep their id but get a new checksum,
+    # so this is what tells the calculator its cached copy went out of date
+    checksum: Mapped[Optional[str]] = mapped_column()
 
     @classmethod
     async def filter_valid_kwargs(cls, score) -> dict:

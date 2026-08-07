@@ -5,9 +5,13 @@ from typing import List
 import dotnet_config as app_config
 
 # Each simulation is a dotnet process that pegs a core while it calculates
-# difficulty. The Pi shares its four cores with the bot and postgres, so only
-# let a couple of them run at a time.
-MAX_CONCURRENT_SIMULATIONS = 2
+# difficulty. The Pi shares its four cores with the bot and postgres, so this
+# stays below the core count.
+# The five simulations of a request no longer wait on each other, so this is
+# what decides how many rounds they take: 2 -> three rounds (~10.2s), 3 -> two
+# (~7.4s, load 1.7), 5 -> one but oversubscribed, which only reaches ~6.6s and
+# drives load to 4.0 - enough to starve the tracking loop it shares the Pi with.
+MAX_CONCURRENT_SIMULATIONS = 3
 _simulation_semaphore = asyncio.Semaphore(MAX_CONCURRENT_SIMULATIONS)
 
 
