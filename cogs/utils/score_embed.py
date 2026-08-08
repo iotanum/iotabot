@@ -139,6 +139,7 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
             f"### [{beatmapset.artist} - {beatmapset.title}]({beatmap.url})\n"
             f"### {difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
         ),
+        ui.Separator(),
         ui.TextDisplay(
             f"**{grade}**  ·  **{play_pp:,.2f}pp** / "
             f"{fc_score_calc['p_attr']['pp']:,.2f}pp if FC\n"
