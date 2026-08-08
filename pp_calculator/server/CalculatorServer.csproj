@@ -11,6 +11,17 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>IotaBot.PpCalculator</RootNamespace>
+
+    <!-- Which machine the output is for. Left unset, publish carries the native
+         libraries for every platform .NET targets - android, ios, browser-wasm,
+         windows, macos, x64 - which was 474MB of a 656MB output on a Pi that is
+         none of them. Set here rather than on the command line so restore and
+         publish cannot disagree about it; both read the project.
+         Building elsewhere: dotnet publish -p:RuntimeIdentifier=linux-x64 -->
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">linux-arm64</RuntimeIdentifier>
+    <!-- The runtime comes from the aspnet base image, so naming a runtime above
+         only narrows which native libraries travel - it does not bundle .NET -->
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,5 +30,24 @@
          applies to this project too. -->
     <ProjectReference Include="../osu-tools/PerformanceCalculator/PerformanceCalculator.csproj" />
   </ItemGroup>
+
+  <!-- osu.Game.Resources is 131MB of fonts, textures and samples, for a server
+       that renders nothing. Nothing on the calculation path reaches it: the
+       things that would - skins, backgrounds, audio tracks - are exactly the
+       members ProcessorWorkingBeatmap leaves as NotImplementedException, so
+       upstream already treats them as unreachable here.
+
+       Dropped from the publish set rather than deleted from the image
+       afterwards, so it is declared in the build instead of hidden in a
+       Dockerfile. If anything ever does reach for it, the assembly fails to
+       load and the request answers 500 with the reason - a visible failure
+       rather than a wrong number. -->
+  <Target Name="DropUnusedAssets" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish
+          Remove="@(ResolvedFileToPublish)"
+          Condition="'%(Filename)' == 'osu.Game.Resources'" />
+    </ItemGroup>
+  </Target>
 
 </Project>

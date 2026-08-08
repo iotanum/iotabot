@@ -12,20 +12,20 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 # or https://github.com/ppy/osu-queue-score-statistics/commits/master/
 # or https://github.com/ppy/osu-queue-score-statistics/blob/master/osu.Server.Queues.ScoreStatisticsProcessor/osu.Server.Queues.ScoreStatisticsProcessor.csproj#L17-L21
 ENV LIVE_OSU_RULESET_VERSION=2026.730.0
-
 WORKDIR /app
 COPY --from=base /app/osu-tools /app/osu-tools
 
 COPY Directory.Build.targets ./
 
+# The runtime to build for, and what gets left out of the output, are both
+# declared in CalculatorServer.csproj - restore and publish read them from there
 COPY server/CalculatorServer.csproj server/
-RUN dotnet restore server/CalculatorServer.csproj -p:LiveOsuRulesetVersion=${LIVE_OSU_RULESET_VERSION}
+RUN dotnet restore server/CalculatorServer.csproj \
+        -p:LiveOsuRulesetVersion=${LIVE_OSU_RULESET_VERSION}
 
 COPY server/CalculatorServer.cs server/
 
 # debug cuz jit is faster than compiled binaries on raspi
-# Pulls PerformanceCalculator in through the project reference, so the command
-# and its parser end up here too - no separate publish of osu-tools needed.
 RUN dotnet publish server/CalculatorServer.csproj -c Debug --no-restore \
         -p:LiveOsuRulesetVersion=${LIVE_OSU_RULESET_VERSION} -o /app/out
 

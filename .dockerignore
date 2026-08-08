@@ -1,0 +1,20 @@
+# The local virtualenv is built for this machine and would land on top of the
+# one uv creates inside the image, replacing Linux packages with Windows ones.
+# It is also 110MB of build context on its own.
+.venv/
+
+.git/
+.idea/
+
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+
+# Postgres' data directory, bind-mounted at runtime
+db_data/
+
+*.log
+
+# Note: .env / .env.local are deliberately NOT ignored. app/environment.py reads
+# them from the working directory, so the image needs them to start.

@@ -1,3 +1,33 @@
+[project]
+name = "iotabot"
+version = "0.1.0"
+# The image runs 3.11 and the code needs it - asyncio.TaskGroup and `X | None`
+# annotations are both 3.10+/3.11 features
+requires-python = ">=3.11"
+dependencies = [
+    "aiohttp",
+    "alembic",
+    "discord.py",
+    "greenlet",
+    "ossapi[async]",
+    "psutil",
+    "psycopg[binary,pool]",
+    "python-dotenv",
+    "sqlalchemy",
+]
+
+[dependency-groups]
+# Not installed in the image - `uv sync --no-dev` leaves these out
+dev = [
+    "isort",
+    "ruff",
+]
+
+[tool.uv]
+# There is no package here to build: bot.py, app/ and cogs/ are imported from
+# the working directory, so uv manages the environment and nothing else
+package = false
+
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
 exclude = [
