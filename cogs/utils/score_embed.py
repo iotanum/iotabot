@@ -27,6 +27,26 @@ async def fix_mods(score: Scores) -> str:
     return f" __**+ {mods.replace('CL', '').strip()}**__ "
 
 
+def unbreakable(text: str) -> str:
+    """
+    Replaces the spaces in `text` with ones the renderer cannot wrap at.
+
+    Used to choose where a heading wraps. A heading is a block with margins of
+    its own, so two of them are pushed apart by a gap no markdown can close -
+    but a *single* heading that wraps puts its lines at ordinary spacing. Making
+    everything unbreakable except one real space leaves the renderer exactly one
+    place to break, which turns that wrap into a deliberate line break.
+
+    Never put these in a link's URL, only its label - a non-breaking space is
+    not a space as far as the URL is concerned and the link stops resolving.
+
+    Written as an escape rather than the character itself: the two are
+    indistinguishable on screen, so a stray reformat could swap one for an
+    ordinary space and quietly undo all of this with an empty-looking diff.
+    """
+    return text.replace(" ", "\N{NO-BREAK SPACE}")
+
+
 async def is_user_stat_change(db_sess, score: Scores) -> list[str]:
     """
     Check if there was a change in user statistics from API.
@@ -123,6 +143,14 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     # with a separator instead of being parenthesised right after the brackets
     difficulty = f"[{beatmap.version}]{mods}".rstrip()
 
+    # The two halves of the heading below. Each is unbreakable on its own, so
+    # the only space the renderer may wrap at is the one between them - see
+    # `unbreakable`. The link label is wrapped, the URL is left alone
+    beatmap_title = unbreakable(f"{beatmapset.artist} - {beatmapset.title}")
+    beatmap_detail = unbreakable(
+        f"{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
+    )
+
     # X/XH are osu!'s SS grades and SH is a silver S; players read them as SS/S
     grade = {"X": "SS", "XH": "SS", "SH": "S"}.get(score.rank, score.rank)
 
@@ -133,11 +161,14 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         # The beatmapset banner, full width across the top of the card
         ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
         # Markdown headings are line-scoped, so everything sharing the username
-        # line renders at heading size - there is no way to mix sizes inline
+        # line renders at heading size - there is no way to mix sizes inline.
+        # The map and its difficulty are one heading rather than two, broken by
+        # the single ordinary space between them: three stacked headings carried
+        # three sets of heading margin, and nothing in markdown or in Components
+        # v2 can shrink those - only having fewer of them helps
         ui.TextDisplay(
             f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}\n"
-            f"### [{beatmapset.artist} - {beatmapset.title}]({beatmap.url})\n"
-            f"### {difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
+            f"### [{beatmap_title}]({beatmap.url}) {beatmap_detail}"
         ),
         ui.Separator(),
         ui.TextDisplay(
