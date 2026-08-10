@@ -162,29 +162,22 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     misses = score.miss or 0
     full_combo = not misses and score.max_combo >= map_max_combo
 
-    # Markdown headings are line-scoped, so everything sharing this line renders
-    # at heading size - there is no way to mix sizes inline. Custom emoji scale
-    # with the line, which is what makes the grade read as a badge here
-    header = f"## {grade} {play_pp:,.0f}pp · {play_accuracy}"
-    if new_highscore:
-        # Subtext, the one size below body text, so the placement reads as an
-        # annotation on the pp above it rather than as another stat
-        header += f"\n-# #{new_highscore} top play"
+    # Markdown headings are line-scoped, so everything sharing the first line
+    # renders at heading size - there is no way to mix sizes inline. Custom
+    # emoji scale with the line, which is what makes the grade read as a badge.
+    #
+    # The player goes directly beneath it at body weight, so the score and who
+    # set it read as one unit at the top of the card
+    header_lines = [f"## {grade} {play_pp:,.0f}pp · {play_accuracy}", player]
 
-    # Balanced brackets are legal link text, so the difficulty can sit inside
-    # the link, where it reads as part of the map's name
-    map_lines = [
-        f"**[{beatmapset.artist} - {beatmapset.title} "
-        f"[{beatmap.version}]]({beatmap.url})**",
-        f"{f'`{mods}` · ' if mods else ''}"
-        f"{played_score_calc['d_attr']['star_rating']:.2f}★",
-    ]
-    blocks: list[ui.Item] = [
-        # The beatmapset banner, full width across the top of the card
-        ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
-        ui.TextDisplay(header),
-        ui.TextDisplay("\n".join(map_lines)),
-    ]
+    # Subtext, the one size below body text, so these read as annotations on the
+    # score above rather than as further stats of their own
+    notes = [f"#{new_highscore} top play"] if new_highscore else []
+    notes += ([played_at] if played_at else []) + (
+        ["osu! lazer"] if score.lazer else []
+    )
+    if notes:
+        header_lines.append(f"-# {' · '.join(notes)}")
 
     # Two numbers that are the same number say nothing, so a full combo prints
     # the one and the word for it instead of the ratio
@@ -202,6 +195,15 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         miss_note = f" ({effective_misses} eff.)" if effective_misses != misses else ""
         combo += f" · ❌ {misses}{miss_note}"
 
+    # Balanced brackets are legal link text, so the difficulty can sit inside
+    # the link, where it reads as part of the map's name
+    map_lines = [
+        f"**[{beatmapset.artist} - {beatmapset.title} "
+        f"[{beatmap.version}]]({beatmap.url})**",
+        f"{f'`{mods}` · ' if mods else ''}"
+        f"{played_score_calc['d_attr']['star_rating']:.2f}★ · {combo}",
+    ]
+
     # What the play was missing out on, always. Only the targets it has not
     # already reached, though: an SS has no accuracy left to find, and a full
     # combo is the FC, so those two would just restate the pp in the header
@@ -212,31 +214,26 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         targets.append(f"{pp_fc:,.0f} FC")
     targets += [f"{pp_95:,.0f} @95%", f"{pp_90:,.0f} @90%"]
 
-    blocks += [
-        ui.TextDisplay(combo),
+    blocks: list[ui.Item] = [
+        # The beatmapset banner, full width across the top of the card
+        ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
+        ui.TextDisplay("\n".join(header_lines)),
+        # The card's only divider: who, above it; what they played, below
         ui.Separator(spacing=SeparatorSpacing.large),
-        # Body text: this is the one row meant to be read against the header
+        ui.TextDisplay("\n".join(map_lines)),
+        # Body text: the one row meant to be read against the pp in the header
         ui.TextDisplay(" · ".join(targets)),
     ]
 
-    # Whatever is true of the play but not part of it - which client, and when
-    footnotes = ([played_at] if played_at else []) + (
-        ["osu! lazer"] if score.lazer else []
+    # The play broken down, and the map it was set on, in subtext underneath the
+    # numbers they explain
+    blocks.append(
+        ui.TextDisplay(
+            f"-# {score.great or 0:,}-{score.ok or 0:,}-{score.meh or 0:,} · "
+            f"BPM {int(bpm)} · AR {beatmap.ar:.1f} · OD {beatmap.accuracy:.1f} · "
+            f"CS {beatmap.cs:.1f} · HP {beatmap.drain:.1f}"
+        )
     )
-
-    # One block, so the lines stay tight against each other. The player sits at
-    # body weight between two subtext lines: that alone is enough to find the
-    # name by, without giving it a heading it does not deserve on a score card
-    footer_lines = [
-        f"-# {score.great or 0:,}-{score.ok or 0:,}-{score.meh or 0:,} · "
-        f"BPM {int(bpm)} · AR {beatmap.ar:.1f} · OD {beatmap.accuracy:.1f} · "
-        f"CS {beatmap.cs:.1f} · HP {beatmap.drain:.1f}",
-        player,
-    ]
-    if footnotes:
-        footer_lines.append(f"-# {' · '.join(footnotes)}")
-
-    blocks.append(ui.TextDisplay("\n".join(footer_lines)))
 
     if changes:
         blocks.append(ui.TextDisplay("\n".join(changes)))
