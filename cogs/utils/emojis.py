@@ -1,17 +1,21 @@
 import os
 
-# The grade strings osu! reports, each with the icon in assets/ranks that shows
-# it. "X"/"XH" are SS and silver SS, "SH" is a silver S
+# Keyed on the grade as it is stored on a score, which is ossapi's Grade *name*
+# rather than the value the API sends: Grade.SS is "X" and Grade.SSH is "XH",
+# but the scores table holds "SS" and "SSH". "SSH"/"SH" are the silver SS and S.
+#
+# The icons are osu!'s own, from the legacy skin in ppy/osu-resources. There is
+# no glyph for F - osu! stable has none - so a failed score falls back to the
+# letter, which `create_score_view` handles
 RANK_ICONS = {
-    "X": "assets/ranks/X.png",
-    "XH": "assets/ranks/XH.png",
+    "SS": "assets/ranks/SS.png",
+    "SSH": "assets/ranks/SSH.png",
     "S": "assets/ranks/S.png",
     "SH": "assets/ranks/SH.png",
     "A": "assets/ranks/A.png",
     "B": "assets/ranks/B.png",
     "C": "assets/ranks/C.png",
     "D": "assets/ranks/D.png",
-    "F": "assets/ranks/F.png",
 }
 
 

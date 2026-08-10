@@ -125,11 +125,11 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     # with a separator instead of being parenthesised right after the brackets
     difficulty = f"[{beatmap.version}]{mods}".rstrip()
 
-    # X/XH are osu!'s SS grades and SH is a silver S; the icons carry that, so
-    # they are keyed on the raw grade. Falls back to spelling it out for the
-    # window before the upload finishes, or if it failed
+    # Falls back to the letter before the icons finish uploading, if that
+    # failed, and always for F - osu! ships no fail glyph. SSH and SH are the
+    # silver SS and S, which players read as plain SS and S
     grade = RANK_EMOJIS.get(
-        score.rank, {"X": "SS", "XH": "SS", "SH": "S"}.get(score.rank, score.rank)
+        score.rank, {"SSH": "SS", "SH": "S"}.get(score.rank, score.rank)
     )
 
     global_rank = f"#{user.global_rank:,}" if user.global_rank is not None else "#N/A"
