@@ -3,6 +3,7 @@ from typing import Optional
 
 import discord
 from discord import ui
+from discord.enums import SeparatorSpacing
 
 from app.models.beatmap import Beatmap
 from app.models.beatmapset import Beatmapset
@@ -136,6 +137,9 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         # line renders at heading size - there is no way to mix sizes inline
         ui.TextDisplay(
             f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}\n"
+        ),
+        ui.Separator(spacing=SeparatorSpacing.large),
+        ui.TextDisplay(
             f"[{beatmapset.artist} - {beatmapset.title}]({beatmap.url})\n"
             f"{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
         ),
@@ -154,15 +158,16 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         # characters per line. A block is one box, two lines, no margin, and at
         # ordinary size both lines fit without wrapping
         ui.TextDisplay(
-            "```\n"
+            "`\n"
             f"BPM: {int(bpm)} "
             f"AR: {beatmap.ar:.2f} "
             f"OD: {beatmap.accuracy:.2f} "
             f"HP: {beatmap.drain:.2g} "
             f"CS: {beatmap.cs:.2g}\n"
             f"SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}\n"
-            "```"
+            "`"
         ),
+        ui.Separator(),
     ]
 
     if changes:
