@@ -134,16 +134,22 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         # The beatmapset banner, full width across the top of the card
         ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
         # Markdown headings are line-scoped, so everything sharing the username
-        # line renders at heading size - there is no way to mix sizes inline
-        ui.TextDisplay(
-            f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}\n"
+        # line renders at heading size - there is no way to mix sizes inline.
+        # A section's accessory is the only image slot Components v2 gives, and
+        # it always renders to the right of the text
+        ui.Section(
+            f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}",
+            accessory=ui.Thumbnail(user.avatar_url),
         ),
         ui.Separator(spacing=SeparatorSpacing.large),
-        ui.TextDisplay(
+        ui.Section(
             f"[{beatmapset.artist} - {beatmapset.title}]({beatmap.url})\n"
-            f"{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
+            f"{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐",
+            accessory=ui.Button(
+                style=discord.ButtonStyle.link, label="Beatmap", url=beatmap.url
+            ),
         ),
-        ui.Separator(),
+        ui.Separator(visible=False),
         ui.TextDisplay(
             f"**{grade}**  ·  **{play_pp:,.2f}pp** / "
             f"{fc_score_calc['p_attr']['pp']:,.2f}pp if FC\n"
@@ -151,7 +157,7 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
             f"🔥 {score.max_combo:,}x / {map_max_combo:,}x  ·  "
             f"❌ {score.miss}x"
         ),
-        ui.Separator(),
+        ui.Separator(visible=False),
         # A code block rather than code spans. Two `###` lines carry a heading
         # margin between them, and putting both spans on one heading traded that
         # gap for a wrap through the middle of a number - headings fit fewer
@@ -183,9 +189,10 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
             f"{' - osu! lazer' if score.lazer else ''}"
         )
     )
+    # The beatmap now has its own button up beside the map it opens, so this
+    # row is left with the profile link
     blocks.append(
         ui.ActionRow(
-            ui.Button(style=discord.ButtonStyle.link, label="Beatmap", url=beatmap.url),
             ui.Button(
                 style=discord.ButtonStyle.link, label=user.username, url=user.url
             ),
