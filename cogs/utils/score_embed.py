@@ -37,8 +37,8 @@ def unbreakable(text: str) -> str:
     everything unbreakable except one real space leaves the renderer exactly one
     place to break, which turns that wrap into a deliberate line break.
 
-    Never put these in a link's URL, only its label - a non-breaking space is
-    not a space as far as the URL is concerned and the link stops resolving.
+    Not for link labels either: Discord drops these entirely inside `[...]`,
+    so the words run together with no space at all. Plain text keeps them.
 
     Written as an escape rather than the character itself: the two are
     indistinguishable on screen, so a stray reformat could swap one for an
@@ -143,10 +143,12 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     # with a separator instead of being parenthesised right after the brackets
     difficulty = f"[{beatmap.version}]{mods}".rstrip()
 
-    # The two halves of the heading below. Each is unbreakable on its own, so
-    # the only space the renderer may wrap at is the one between them - see
-    # `unbreakable`. The link label is wrapped, the URL is left alone
-    beatmap_title = unbreakable(f"{beatmapset.artist} - {beatmapset.title}")
+    # The two halves of the heading below. Only the second is made unbreakable:
+    # Discord *deletes* non-breaking spaces inside a link label rather than
+    # rendering them, so "Mazare & Luma - Nothing More" came out as
+    # "Mazare&Luma-NothingMore". Plain text keeps them, which is why the
+    # difficulty half can still be held together
+    beatmap_title = f"{beatmapset.artist} - {beatmapset.title}"
     beatmap_detail = unbreakable(
         f"{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐"
     )
