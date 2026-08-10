@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timezone
 from typing import Optional
 
 import discord
@@ -19,6 +20,8 @@ async def fix_mods(score: Scores) -> str:
     """
     Formats the mod string from the score object.
     Removes "CL" if present.
+
+    Returns the bare acronyms - the caller decides how to mark them up.
     """
     if not score.mods_list:
         return ""
@@ -26,7 +29,7 @@ async def fix_mods(score: Scores) -> str:
     mods = "".join(score.mods_list)
     if mods == "CL":
         return ""
-    return f" __**+ {mods.replace('CL', '').strip()}**__ "
+    return f"+{mods.replace('CL', '').strip()}"
 
 
 async def is_user_stat_change(db_sess, score: Scores) -> list[str]:
@@ -100,10 +103,12 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     play_pp = score.pp if score.pp else played_score_calc["p_attr"]["pp"]
     fc_score_calc = scores["if_fc"]
 
-    # Extract PP values for different accuracies
-    pp_ss = f"{scores['100']['p_attr']['pp']:,.2f}pp"
-    pp_95 = f"{scores['95']['p_attr']['pp']:,.2f}pp"
-    pp_90 = f"{scores['90']['p_attr']['pp']:,.2f}pp"
+    # Extract PP values for different accuracies. Left as numbers - the row they
+    # end up on prints them without decimals or a unit
+    pp_ss = scores["100"]["p_attr"]["pp"]
+    pp_95 = scores["95"]["p_attr"]["pp"]
+    pp_90 = scores["90"]["p_attr"]["pp"]
+    pp_fc = fc_score_calc["p_attr"]["pp"]
 
     # Assign color by beatmap status - the container's accent bar replaces what
     # used to be the embed colour
@@ -121,10 +126,6 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     user = await OsuDbUser.get(db, score.user_id)
     assert user, f"User '{score.user_id}' missing for score '{score.id}'"
 
-    # `[version](6.02⭐)` is markdown link syntax, so the star rating is set off
-    # with a separator instead of being parenthesised right after the brackets
-    difficulty = f"[{beatmap.version}]{mods}".rstrip()
-
     # Falls back to the letter before the icons finish uploading, if that
     # failed, and always for F - osu! ships no fail glyph. SSH and SH are the
     # silver SS and S, which players read as plain SS and S
@@ -135,68 +136,87 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     global_rank = f"#{user.global_rank:,}" if user.global_rank is not None else "#N/A"
     user_pp = f"{user.pp:,.0f}pp" if user.pp is not None else "N/A"
 
+    # Stored naive and in UTC, so the timestamp has to be told which zone it is
+    # in before Discord can render it as "2 minutes ago" in each reader's own
+    played_at = (
+        f"<t:{int(score.score_ended_at.replace(tzinfo=timezone.utc).timestamp())}:R>"
+        if score.score_ended_at
+        else ""
+    )
+
+    # A full combo has nothing left to reach for, so the combo row folds up into
+    # the difficulty line and the targets below it stop saying anything
+    misses = score.miss or 0
+    full_combo = not misses and score.max_combo >= map_max_combo
+
+    # Markdown headings are line-scoped, so everything sharing this line renders
+    # at heading size - there is no way to mix sizes inline. Custom emoji scale
+    # with the line, which is what makes the grade read as a badge here
+    header = f"## {grade} {play_pp:,.0f}pp · {play_accuracy}"
+    if new_highscore:
+        # Subtext, the one size below body text, so the placement reads as an
+        # annotation on the pp above it rather than as another stat
+        header += f"\n-# #{new_highscore} top play"
+
+    # Balanced brackets are legal link text, so the difficulty can sit inside
+    # the link, where it reads as part of the map's name
+    map_lines = [
+        f"**[{beatmapset.artist} - {beatmapset.title} "
+        f"[{beatmap.version}]]({beatmap.url})**",
+        f"{f'`{mods}` · ' if mods else ''}"
+        f"{played_score_calc['d_attr']['star_rating']:.2f}★",
+    ]
+    if full_combo:
+        map_lines[-1] += f" · 🔗 {map_max_combo:,}x FC"
+
     blocks: list[ui.Item] = [
         # The beatmapset banner, full width across the top of the card
         ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
-        # Markdown headings are line-scoped, so everything sharing the username
-        # line renders at heading size - there is no way to mix sizes inline.
-        # A button accessory rather than the avatar: the same slot holds a
-        # full-size thumbnail, which stretches the block to the image's height
-        ui.Section(
-            f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}",
-            accessory=ui.Button(
-                style=discord.ButtonStyle.link, label="Profile", url=user.url
-            ),
+        ui.TextDisplay(header),
+        ui.TextDisplay("\n".join(map_lines)),
+    ]
+
+    # The calculator counts slider breaks that never showed up as a miss, so
+    # it only earns room on the line when it disagrees with the count
+    effective_misses = round(played_score_calc["p_attr"]["effective_miss_count"])
+    miss_note = f" ({effective_misses} eff.)" if effective_misses != misses else ""
+
+    blocks += [
+        ui.TextDisplay(
+            f"🔗 {score.max_combo:,}/{map_max_combo:,}x · ❌ {misses}{miss_note}"
         ),
         ui.Separator(spacing=SeparatorSpacing.large),
-        ui.Section(
-            f"[{beatmapset.artist} - {beatmapset.title}]({beatmap.url})\n"
-            f"{difficulty} · {played_score_calc['d_attr']['star_rating']:.2f}⭐",
-            accessory=ui.Button(
-                style=discord.ButtonStyle.link, label="Beatmap", url=beatmap.url
-            ),
-        ),
-        ui.Separator(visible=False),
+        # What the play was missing out on. All four are body text: they are
+        # the one row meant to be compared against the pp in the header
         ui.TextDisplay(
-            f"**{grade}**  ·  **{play_pp:,.2f}pp** / "
-            f"{fc_score_calc['p_attr']['pp']:,.2f}pp if FC\n"
-            f"🎯 **{play_accuracy}**  ·  "
-            f"🔥 {score.max_combo:,}x / {map_max_combo:,}x  ·  "
-            f"❌ {score.miss}x"
-        ),
-        ui.Separator(visible=False),
-        # A code block rather than code spans. Two `###` lines carry a heading
-        # margin between them, and putting both spans on one heading traded that
-        # gap for a wrap through the middle of a number - headings fit fewer
-        # characters per line. A block is one box, two lines, no margin, and at
-        # ordinary size both lines fit without wrapping
-        ui.TextDisplay(
-            "\n"
-            f"`BPM: {int(bpm)} "
-            f"AR: {beatmap.ar:.2f} "
-            f"OD: {beatmap.accuracy:.2f} "
-            f"HP: {beatmap.drain:.2g} "
-            f"CS: {beatmap.cs:.2g}`\n"
-            f"`SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}`"
+            f"{pp_ss:,.0f} SS · {pp_fc:,.0f} FC · "
+            f"{pp_95:,.0f} @95% · {pp_90:,.0f} @90%"
         ),
     ]
 
-    if changes:
-        highscore_str = ""
-        if new_highscore:
-            highscore_str = f"🥇 **New Highscore! (#{new_highscore})** 🥇\n"
-        blocks.append(ui.TextDisplay(highscore_str + "\n".join(changes)))
-
+    # Both footer lines in one block - separate ones would be pushed apart, and
+    # these belong together underneath everything else
     blocks.append(
         ui.TextDisplay(
-            f"-# {score.great or 0:,}x300 / {score.ok or 0:,}x100 / "
-            f"{score.meh or 0:,}x50 "
-            f"(Effective ❌: "
-            f"{round(played_score_calc['p_attr']['effective_miss_count'])}x)"
-            f"{' - osu! lazer' if score.lazer else ''}"
+            f"-# {score.great or 0:,}-{score.ok or 0:,}-{score.meh or 0:,} · "
+            f"BPM {int(bpm)} · AR {beatmap.ar:.1f} · OD {beatmap.accuracy:.1f} · "
+            f"CS {beatmap.cs:.1f} · HP {beatmap.drain:.1f}\n"
+            f"-# [{user.username}]({user.url}) · {global_rank} · {user_pp}"
+            f"{f' · {played_at}' if played_at else ''}"
+            f"{' · osu! lazer' if score.lazer else ''}"
         )
     )
-    # No action row: both links sit beside the thing they open
+
+    if changes:
+        blocks.append(ui.TextDisplay("\n".join(changes)))
+
+    # One row along the bottom now that neither link has a section to sit beside
+    blocks.append(
+        ui.ActionRow(
+            ui.Button(style=discord.ButtonStyle.link, label="Profile", url=user.url),
+            ui.Button(style=discord.ButtonStyle.link, label="Beatmap", url=beatmap.url),
+        )
+    )
 
     # timeout=None: the buttons are links, so the view never needs to stay
     # dispatchable, and a posted score should not expire
