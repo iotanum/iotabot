@@ -163,9 +163,8 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
             f"AR: {beatmap.ar:.2f} "
             f"OD: {beatmap.accuracy:.2f} "
             f"HP: {beatmap.drain:.2g} "
-            f"CS: {beatmap.cs:.2g}\n"
-            f"SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}\n"
-            "`"
+            f"CS: {beatmap.cs:.2g}`\n"
+            f"`SS: {pp_ss} / 95%: {pp_95} / 90%: {pp_90}`"
         ),
         ui.Separator(),
     ]
