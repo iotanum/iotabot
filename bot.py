@@ -8,6 +8,7 @@ from discord.ext import commands
 
 from app.core import DatabaseManager
 from app.environment import APP_CONFIG
+from cogs.utils.emojis import RANK_EMOJIS, upload_rank_emojis
 
 
 class Bot(commands.Bot):
@@ -28,6 +29,16 @@ class Bot(commands.Bot):
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("------")
+
+        # Here rather than in setup_hook: creating an application emoji needs
+        # the application id, which only arrives with this event. Fires again
+        # on every reconnect, hence the check, and a failure only costs the
+        # score cards their rank icons - not worth taking the bot down for
+        if not RANK_EMOJIS:
+            try:
+                await upload_rank_emojis(self)
+            except Exception:
+                logging.exception("Could not upload rank emojis")
 
     async def setup_hook(self) -> None:
         for extension in self.initial_extensions:

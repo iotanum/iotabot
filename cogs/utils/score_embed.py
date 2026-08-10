@@ -11,6 +11,7 @@ from app.models.scores import Scores
 from app.models.user import User as OsuDbUser
 from cogs.osu import client as osu_client
 from cogs.utils.calculator import calculate_bpm, calculate_scores
+from cogs.utils.emojis import RANK_EMOJIS
 from cogs.utils.user_changes import get_user_changes
 
 
@@ -124,8 +125,12 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     # with a separator instead of being parenthesised right after the brackets
     difficulty = f"[{beatmap.version}]{mods}".rstrip()
 
-    # X/XH are osu!'s SS grades and SH is a silver S; players read them as SS/S
-    grade = {"X": "SS", "XH": "SS", "SH": "S"}.get(score.rank, score.rank)
+    # X/XH are osu!'s SS grades and SH is a silver S; the icons carry that, so
+    # they are keyed on the raw grade. Falls back to spelling it out for the
+    # window before the upload finishes, or if it failed
+    grade = RANK_EMOJIS.get(
+        score.rank, {"X": "SS", "XH": "SS", "SH": "S"}.get(score.rank, score.rank)
+    )
 
     global_rank = f"#{user.global_rank:,}" if user.global_rank is not None else "#N/A"
     user_pp = f"{user.pp:,.0f}pp" if user.pp is not None else "N/A"
@@ -135,10 +140,13 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
         # Markdown headings are line-scoped, so everything sharing the username
         # line renders at heading size - there is no way to mix sizes inline.
-        # No avatar here: a section accessory is a full-size thumbnail, not a
-        # small inline one, and it stretches the block to its own height
-        ui.TextDisplay(
-            f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}"
+        # A button accessory rather than the avatar: the same slot holds a
+        # full-size thumbnail, which stretches the block to the image's height
+        ui.Section(
+            f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}",
+            accessory=ui.Button(
+                style=discord.ButtonStyle.link, label="Profile", url=user.url
+            ),
         ),
         ui.Separator(spacing=SeparatorSpacing.large),
         ui.Section(
@@ -188,15 +196,7 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
             f"{' - osu! lazer' if score.lazer else ''}"
         )
     )
-    # The beatmap now has its own button up beside the map it opens, so this
-    # row is left with the profile link
-    blocks.append(
-        ui.ActionRow(
-            ui.Button(
-                style=discord.ButtonStyle.link, label=user.username, url=user.url
-            ),
-        )
-    )
+    # No action row: both links sit beside the thing they open
 
     # timeout=None: the buttons are links, so the view never needs to stay
     # dispatchable, and a posted score should not expire
