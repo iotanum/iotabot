@@ -135,11 +135,10 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
         # Markdown headings are line-scoped, so everything sharing the username
         # line renders at heading size - there is no way to mix sizes inline.
-        # A section's accessory is the only image slot Components v2 gives, and
-        # it always renders to the right of the text
-        ui.Section(
-            f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}",
-            accessory=ui.Thumbnail(user.avatar_url),
+        # No avatar here: a section accessory is a full-size thumbnail, not a
+        # small inline one, and it stretches the block to its own height
+        ui.TextDisplay(
+            f"## [{user.username}]({user.url})  ·  {global_rank}  ·  {user_pp}"
         ),
         ui.Separator(spacing=SeparatorSpacing.large),
         ui.Section(
