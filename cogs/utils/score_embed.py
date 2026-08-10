@@ -136,6 +136,19 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     global_rank = f"#{user.global_rank:,}" if user.global_rank is not None else "#N/A"
     user_pp = f"{user.pp:,.0f}pp" if user.pp is not None else "N/A"
 
+    # A flag is a pair of regional indicator symbols, which sit at a fixed
+    # offset from the letters they are named after. It is what gives the line a
+    # colour of its own, so the eye finds the player before it reads any words
+    country = user.country_code
+    flag = (
+        "".join(chr(0x1F1E6 + ord(char) - ord("A")) for char in country.upper())
+        if country and len(country) == 2 and country.isalpha()
+        else ""
+    )
+    player = (
+        f"{flag} [{user.username}]({user.url}) · {global_rank} · {user_pp}".lstrip()
+    )
+
     # Stored naive and in UTC, so the timestamp has to be told which zone it is
     # in before Discord can render it as "2 minutes ago" in each reader's own
     played_at = (
@@ -166,9 +179,6 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         f"{f'`{mods}` · ' if mods else ''}"
         f"{played_score_calc['d_attr']['star_rating']:.2f}★",
     ]
-    if full_combo:
-        map_lines[-1] += f" · 🔗 {map_max_combo:,}x FC"
-
     blocks: list[ui.Item] = [
         # The beatmapset banner, full width across the top of the card
         ui.MediaGallery(discord.MediaGalleryItem(beatmap.cover_url)),
@@ -176,36 +186,57 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         ui.TextDisplay("\n".join(map_lines)),
     ]
 
-    # The calculator counts slider breaks that never showed up as a miss, so
-    # it only earns room on the line when it disagrees with the count
+    # Two numbers that are the same number say nothing, so a full combo prints
+    # the one and the word for it instead of the ratio
+    combo = (
+        f"🔗 {map_max_combo:,}x FC"
+        if full_combo
+        else f"🔗 {score.max_combo:,}/{map_max_combo:,}x"
+    )
+
+    # The calculator counts slider breaks that never showed up as a miss, so the
+    # count only earns room on the line when it disagrees with the played one -
+    # and the pair only earns room at all when one of them is not zero
     effective_misses = round(played_score_calc["p_attr"]["effective_miss_count"])
-    miss_note = f" ({effective_misses} eff.)" if effective_misses != misses else ""
+    if misses or effective_misses:
+        miss_note = f" ({effective_misses} eff.)" if effective_misses != misses else ""
+        combo += f" · ❌ {misses}{miss_note}"
+
+    # What the play was missing out on, always. Only the targets it has not
+    # already reached, though: an SS has no accuracy left to find, and a full
+    # combo is the FC, so those two would just restate the pp in the header
+    targets = []
+    if score.rank not in ("SS", "SSH"):
+        targets.append(f"{pp_ss:,.0f} SS")
+    if not full_combo:
+        targets.append(f"{pp_fc:,.0f} FC")
+    targets += [f"{pp_95:,.0f} @95%", f"{pp_90:,.0f} @90%"]
 
     blocks += [
-        ui.TextDisplay(
-            f"🔗 {score.max_combo:,}/{map_max_combo:,}x · ❌ {misses}{miss_note}"
-        ),
+        ui.TextDisplay(combo),
         ui.Separator(spacing=SeparatorSpacing.large),
-        # What the play was missing out on. All four are body text: they are
-        # the one row meant to be compared against the pp in the header
-        ui.TextDisplay(
-            f"{pp_ss:,.0f} SS · {pp_fc:,.0f} FC · "
-            f"{pp_95:,.0f} @95% · {pp_90:,.0f} @90%"
-        ),
+        # Body text: this is the one row meant to be read against the header
+        ui.TextDisplay(" · ".join(targets)),
     ]
 
-    # Both footer lines in one block - separate ones would be pushed apart, and
-    # these belong together underneath everything else
-    blocks.append(
-        ui.TextDisplay(
-            f"-# {score.great or 0:,}-{score.ok or 0:,}-{score.meh or 0:,} · "
-            f"BPM {int(bpm)} · AR {beatmap.ar:.1f} · OD {beatmap.accuracy:.1f} · "
-            f"CS {beatmap.cs:.1f} · HP {beatmap.drain:.1f}\n"
-            f"-# [{user.username}]({user.url}) · {global_rank} · {user_pp}"
-            f"{f' · {played_at}' if played_at else ''}"
-            f"{' · osu! lazer' if score.lazer else ''}"
-        )
+    # Whatever is true of the play but not part of it - which client, and when
+    footnotes = ([played_at] if played_at else []) + (
+        ["osu! lazer"] if score.lazer else []
     )
+
+    # One block, so the lines stay tight against each other. The player sits at
+    # body weight between two subtext lines: that alone is enough to find the
+    # name by, without giving it a heading it does not deserve on a score card
+    footer_lines = [
+        f"-# {score.great or 0:,}-{score.ok or 0:,}-{score.meh or 0:,} · "
+        f"BPM {int(bpm)} · AR {beatmap.ar:.1f} · OD {beatmap.accuracy:.1f} · "
+        f"CS {beatmap.cs:.1f} · HP {beatmap.drain:.1f}",
+        player,
+    ]
+    if footnotes:
+        footer_lines.append(f"-# {' · '.join(footnotes)}")
+
+    blocks.append(ui.TextDisplay("\n".join(footer_lines)))
 
     if changes:
         blocks.append(ui.TextDisplay("\n".join(changes)))
