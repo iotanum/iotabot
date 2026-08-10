@@ -158,8 +158,8 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         # characters per line. A block is one box, two lines, no margin, and at
         # ordinary size both lines fit without wrapping
         ui.TextDisplay(
-            "`\n"
-            f"BPM: {int(bpm)} "
+            "\n"
+            f"`BPM: {int(bpm)} "
             f"AR: {beatmap.ar:.2f} "
             f"OD: {beatmap.accuracy:.2f} "
             f"HP: {beatmap.drain:.2g} "
