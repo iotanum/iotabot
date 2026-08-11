@@ -31,10 +31,12 @@ class ScoreTracker(commands.Cog):
         # put the real period at ~2.1s, so this is the period itself and the
         # wait is whatever is left of it - the gate is absorbed rather than
         # added. At 1.5s that is ~40 gate calls a minute, ~46 with the fetches.
-        # Waiting is where detection latency goes after all: play_count moves
-        # before /recent publishes it, so a play takes two or three cycles to
-        # pick up (measured: 100 cycles for 33 detections) and each one costs a
-        # full period.
+        # Chosen for steady pacing rather than for latency. Halving the period
+        # did not move detection: the cycles a play takes to turn up rose to
+        # match, leaving the wall-clock wait at ~6.4s either way. That wait is
+        # osu! publishing the score, not us sampling for it - measured at 1.5s
+        # to 7.6s from the play ending, against ~2.2s of gate, fetch and wait
+        # that is actually ours.
         self.cycle_period = 1.5
         # Backoff after the loop throws, and the gap that counts as a stall
         # worth logging
@@ -49,9 +51,9 @@ class ScoreTracker(commands.Cog):
         self.max_scores_per_check = 5
         self._warned_channels: set[int] = set()
         self._play_counts: dict[int, int] = {}
-        # Passes waiting to be built and sent. Posting a score takes ~10s in
-        # the pp calculator, so it runs in its own task - the tracking loop
-        # would otherwise go blind to everyone else's plays for that long
+        # Passes waiting to be built and sent. Building a card takes a few
+        # seconds of osu! API calls, so it runs in its own task - the tracking
+        # loop would otherwise go blind to everyone else's plays for that long
         self._post_queue: asyncio.Queue = asyncio.Queue()
 
     @commands.Cog.listener()
@@ -176,8 +178,9 @@ class ScoreTracker(commands.Cog):
     async def post_scores(self):
         """
         Builds and sends queued score posts, one at a time, in the order the
-        plays happened. Runs as its own task so the ~10s calculator round trip
-        per pass never stops the tracking loop from sampling play counts.
+        plays happened. Runs as its own task so the few seconds a card takes to
+        build never stop the tracking loop from sampling play counts. Nearly all
+        of that is the top-plays lookup; the calculator is well under a second.
         """
         while not self.bot.is_closed():
             score, channels = await self._post_queue.get()

@@ -168,7 +168,16 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     #
     # The player goes directly beneath it at body weight, so the score and who
     # set it read as one unit at the top of the card
-    header_lines = [f"## {grade} {play_pp:,.0f}pp · {play_accuracy}", player]
+
+    # What the play would have been worth intact, right against what it was
+    # actually worth - the gap between the two is the whole story of a dropped
+    # combo, and a row apart the eye has to carry one number to the other. A
+    # full combo has no gap to show
+    fc_note = "" if full_combo else f" ({pp_fc:,.0f} FC)"
+    header_lines = [
+        f"## {grade} {play_pp:,.0f}pp{fc_note} · {play_accuracy}",
+        player,
+    ]
 
     # Subtext, the one size below body text, so these read as annotations on the
     # score above rather than as further stats of their own
@@ -205,13 +214,11 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     ]
 
     # What the play was missing out on, always. Only the targets it has not
-    # already reached, though: an SS has no accuracy left to find, and a full
-    # combo is the FC, so those two would just restate the pp in the header
+    # already reached, though: an SS has no accuracy left to find. The FC has
+    # moved up to the header, against the pp it is meant to be read with
     targets = []
     if score.rank not in ("SS", "SSH"):
         targets.append(f"{pp_ss:,.0f} SS")
-    if not full_combo:
-        targets.append(f"{pp_fc:,.0f} FC")
     targets += [f"{pp_95:,.0f} @95%", f"{pp_90:,.0f} @90%"]
 
     blocks: list[ui.Item] = [
