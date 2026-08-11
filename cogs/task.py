@@ -27,16 +27,21 @@ class ScoreTracker(commands.Cog):
         # loop fetched per tracked user and 21 calls a cycle made any fixed wait
         # unsafe. The batch play count lookup replaced those with one call, so a
         # cycle is now that plus a fetch for each user that played - about 1.3
-        # calls, measured 33-36/min. A constant is enough for that, and the
-        # cycle cannot run away on its own: the two calls take 1.3s between
-        # them, so even waiting not at all would only reach ~58/min.
-        # Waiting is not where detection latency goes - the wait is half a cycle
-        # on average, against a gate call and fetch that are paid in full every
-        # time.
-        self.sleep_duration = 1.1
+        # calls, measured 33-36/min. Waiting a fixed gap on top of the gate call
+        # put the real period at ~2.1s, so this is the period itself and the
+        # wait is whatever is left of it - the gate is absorbed rather than
+        # added. At 1.5s that is ~40 gate calls a minute, ~46 with the fetches.
+        # Waiting is where detection latency goes after all: play_count moves
+        # before /recent publishes it, so a play takes two or three cycles to
+        # pick up (measured: 100 cycles for 33 detections) and each one costs a
+        # full period.
+        self.cycle_period = 1.5
         # Backoff after the loop throws, and the gap that counts as a stall
         # worth logging
         self.max_sleep_duration = 5
+        # Floor under the leftover wait, so a slow gate stretches the period
+        # instead of chaining cycles back to back
+        self.min_sleep_duration = 0.2
         self.max_concurrent_lookups = 5
         self.request_semaphore = asyncio.Semaphore(self.max_concurrent_lookups)
         # Catch-up cap when a user's play count jumped by more than one
@@ -225,9 +230,7 @@ class ScoreTracker(commands.Cog):
                 cycle_start = time.monotonic()
                 # Gap between gate samples - it bounds how stale a detection can
                 # be, so it is the first number to look at when posts lag
-                since_last = (
-                    cycle_start - last_cycle_start if last_cycle_start else 0.0
-                )
+                since_last = cycle_start - last_cycle_start if last_cycle_start else 0.0
                 last_cycle_start = cycle_start
 
                 tracking_map = await self.get_tracking_channels()
@@ -244,16 +247,21 @@ class ScoreTracker(commands.Cog):
                             )
                         )
                 work_s = time.monotonic() - work_start
+
+                sleep_s = max(
+                    self.min_sleep_duration,
+                    self.cycle_period - (time.monotonic() - cycle_start),
+                )
                 # Idle cycles run every couple of seconds, so logging them all
                 # would drown the log - keep the ones that did work or stalled
                 if played_users or since_last > self.max_sleep_duration + 5:
                     logging.info(
                         f"[lag] cycle since_last={since_last:.1f}s "
                         f"gate={gate_s:.1f}s moved={len(played_users)} "
-                        f"work={work_s:.1f}s sleep={self.sleep_duration:.1f}s "
+                        f"work={work_s:.1f}s sleep={sleep_s:.1f}s "
                         f"calls={RequestCounter.requests_per_minute()}/min"
                     )
-                await asyncio.sleep(self.sleep_duration)
+                await asyncio.sleep(sleep_s)
             except Exception:
                 logging.exception("Error in tracking loop")
                 # Back off instead of retrying immediately, a failure that sticks
