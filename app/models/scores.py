@@ -18,6 +18,7 @@ class Scores(Base):
     __tablename__ = "scores"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    osu_score_id: Mapped[Optional[int]] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey("user.user_id"))
     beatmap_id: Mapped[int] = mapped_column(ForeignKey("beatmap.beatmap_id"))
     score_ended_at: Mapped[Optional[datetime]] = mapped_column()
@@ -50,6 +51,7 @@ class Scores(Base):
         valid_score = dict()
 
         valid_score["user_id"] = score.user_id
+        valid_score["osu_score_id"] = score.id
         # remove id from the dictionary, we don't want to populate this field in our db
         logging.debug(f"Score from API for user '{score.user_id}': {score_dict}")
         score_dict.pop("id", None)

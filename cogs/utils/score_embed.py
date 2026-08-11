@@ -239,12 +239,22 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
         blocks.append(ui.TextDisplay("\n".join(changes)))
 
     # One row along the bottom now that neither link has a section to sit beside
-    blocks.append(
-        ui.ActionRow(
-            ui.Button(style=discord.ButtonStyle.link, label="Profile", url=user.url),
-            ui.Button(style=discord.ButtonStyle.link, label="Beatmap", url=beatmap.url),
+    links = [
+        ui.Button(style=discord.ButtonStyle.link, label="Profile", url=user.url),
+        ui.Button(style=discord.ButtonStyle.link, label="Beatmap", url=beatmap.url),
+    ]
+
+    # Scores stored before the column existed have no id to link to
+    if score.osu_score_id:
+        links.append(
+            ui.Button(
+                style=discord.ButtonStyle.link,
+                label="Score",
+                url=f"https://osu.ppy.sh/scores/{score.osu_score_id}",
+            )
         )
-    )
+
+    blocks.append(ui.ActionRow(*links))
 
     # timeout=None: the buttons are links, so the view never needs to stay
     # dispatchable, and a posted score should not expire
