@@ -11,7 +11,12 @@ from app.models.beatmapset import Beatmapset
 from app.models.scores import Scores
 from app.models.user import User as OsuDbUser
 from cogs.osu import client as osu_client
-from cogs.utils.calculator import calculate_bpm, calculate_scores
+from cogs.utils.calculator import (
+    adjusted_difficulty,
+    calculate_bpm,
+    calculate_scores,
+    mod_rate,
+)
 from cogs.utils.emojis import RANK_EMOJIS
 from cogs.utils.user_changes import get_user_changes
 
@@ -21,6 +26,10 @@ async def fix_mods(score: Scores) -> str:
     Formats the mod string from the score object.
     Removes "CL" if present.
 
+    A rate dialled off its mod's default is named, since a 1.2x double time and
+    the 1.5x one are the same acronym and nothing else on the card separates
+    them. A rate left at the default says nothing the acronym doesn't.
+
     Returns the bare acronyms - the caller decides how to mark them up.
     """
     if not score.mods_list:
@@ -29,7 +38,11 @@ async def fix_mods(score: Scores) -> str:
     mods = "".join(score.mods_list)
     if mods == "CL":
         return ""
-    return f"+{mods.replace('CL', '').strip()}"
+
+    rate = mod_rate(score.mods_list, score.mod_settings)
+    dialled = f" ({rate:g}x)" if rate != mod_rate(score.mods_list) else ""
+
+    return f"+{mods.replace('CL', '').strip()}{dialled}"
 
 
 async def is_user_stat_change(db_sess, score: Scores) -> list[str]:
@@ -95,7 +108,17 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     new_highscore = await is_new_highscore(score) if changes else None
 
     scores = await calculation
-    bpm = await calculate_bpm(score.mods_list, beatmap.bpm or 0.0)
+    bpm = await calculate_bpm(score.mods_list, beatmap.bpm or 0.0, score.mod_settings)
+    # The stored stats are the map's own. What the play met is what belongs
+    # beside a bpm that is already rate-adjusted
+    ar, od, cs, hp = adjusted_difficulty(
+        score.mods_list,
+        beatmap.ar,
+        beatmap.accuracy,
+        beatmap.cs,
+        beatmap.drain,
+        score.mod_settings,
+    )
 
     # Extract and calculate play statistics
     play_accuracy = f"{100 * (score.accuracy or 0):.2f}%"
@@ -237,8 +260,8 @@ async def create_score_view(db, score: Scores) -> ui.LayoutView:
     blocks.append(
         ui.TextDisplay(
             f"-# {score.great or 0:,}-{score.ok or 0:,}-{score.meh or 0:,} · "
-            f"BPM {int(bpm)} · AR {beatmap.ar:.1f} · OD {beatmap.accuracy:.1f} · "
-            f"CS {beatmap.cs:.1f} · HP {beatmap.drain:.1f}"
+            f"BPM {int(bpm)} · AR {ar:.1f} · OD {od:.1f} · "
+            f"CS {cs:.1f} · HP {hp:.1f}"
         )
     )
 

@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, select
+from sqlalchemy import JSON, ForeignKey, select
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -31,6 +31,9 @@ class Scores(Base):
     ok: Mapped[Optional[int]] = mapped_column()
     great: Mapped[Optional[int]] = mapped_column()
     miss: Mapped[Optional[int]] = mapped_column()
+    large_tick_miss: Mapped[Optional[int]] = mapped_column()
+    slider_tail_miss: Mapped[Optional[int]] = mapped_column()
+    mod_settings: Mapped[Optional[dict]] = mapped_column(JSON)
     passed: Mapped[bool] = mapped_column()
     lazer: Mapped[bool] = mapped_column(default=False)
 
@@ -41,7 +44,10 @@ class Scores(Base):
     def mods_list(self):
         if not self.mods:
             return None
-        return self.mods.strip("{}").split(",")
+        # An empty or blank array would otherwise yield empty acronyms - a bare
+        # "+" on a card, and `--mod ""` at the calculator
+        acronyms = [mod.strip() for mod in self.mods.strip("{}").split(",")]
+        return [mod for mod in acronyms if mod] or None
 
     @classmethod
     async def filter_valid_kwargs(cls, db, score):
@@ -88,10 +94,29 @@ class Scores(Base):
         if is_lazer_score:
             valid_score["lazer"] = True
 
+            # Lazer counts slider tails towards accuracy but only reports the
+            # ones that were hit, so the misses are what the map holds less what
+            # landed. Classic scores track neither tails nor large ticks, and
+            # the calculator ignores both counts once CL is set, so they are
+            # only worth collecting for a lazer play
+            held = getattr(score.maximum_statistics, "slider_tail_hit", None) or 0
+            landed = getattr(score.statistics, "slider_tail_hit", None) or 0
+            valid_score["slider_tail_miss"] = held - landed
+        else:
+            valid_score.pop("large_tick_miss", None)
+
         if mods:
             valid_score["mods"] = []
+            # Keyed by acronym, and only for the mods that carry any - lazer
+            # lets DT and HT be dialled off their default rate, and the acronym
+            # on its own cannot tell a 1.2x double time from the 1.5x one
+            settings = dict()
             for mod in mods:
                 valid_score["mods"].append(mod.acronym)
+                if getattr(mod, "settings", None):
+                    settings[mod.acronym] = mod.settings
+            if settings:
+                valid_score["mod_settings"] = settings
         else:
             valid_score.pop("mods", None)
 
